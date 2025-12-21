@@ -1,0 +1,577 @@
+{
+  "contract_version": "1.0.0",
+  "last_updated": "2025-12-15",
+  "description": "FleetGuard AI Dataset Contract - Defines data schemas, validation rules, and quality constraints for the fleet management system",
+  "project": {
+    "name": "FleetGuard AI",
+    "description": "Multi-Agent Fleet Management System with Predictive Maintenance",
+    "target_variable": "monthly_maintenance_cost",
+    "ml_task": "regression"
+  },
+  "schemas": {
+    "vehicles": {
+      "description": "Vehicle master data - core fleet information",
+      "source": "database.vehicles table",
+      "record_count_expected": 85,
+      "required_fields": [
+        "vehicle_id",
+        "plate",
+        "make_model",
+        "purchase_date",
+        "assigned_to"
+      ],
+      "fields": {
+        "vehicle_id": {
+          "type": "integer",
+          "description": "Unique vehicle identifier (primary key)",
+          "constraints": {
+            "required": true,
+            "unique": true,
+            "min": 1
+          }
+        },
+        "plate": {
+          "type": "string",
+          "description": "Vehicle license plate number",
+          "constraints": {
+            "required": true,
+            "unique": true,
+            "pattern": "^[0-9]{2,3}-[0-9]{2,3}-[0-9]{2,3}$",
+            "example": "12-345-67"
+          }
+        },
+        "make_model": {
+          "type": "string",
+          "description": "Vehicle manufacturer and model",
+          "constraints": {
+            "required": true,
+            "allowed_values": [
+              "Toyota Corolla",
+              "Honda Civic",
+              "Mazda 3",
+              "Hyundai i30",
+              "Kia Picanto",
+              "Nissan Micra",
+              "Suzuki Swift"
+            ]
+          }
+        },
+        "purchase_date": {
+          "type": "date",
+          "description": "Date vehicle was purchased/added to fleet",
+          "constraints": {
+            "required": true,
+            "format": "YYYY-MM-DD",
+            "min_date": "2018-01-01",
+            "max_date": "2023-12-31"
+          }
+        },
+        "initial_km": {
+          "type": "integer",
+          "description": "Odometer reading when vehicle entered fleet",
+          "constraints": {
+            "required": false,
+            "min": 0,
+            "max": 50000
+          }
+        },
+        "current_km": {
+          "type": "integer",
+          "description": "Current odometer reading",
+          "constraints": {
+            "required": true,
+            "min": 10000,
+            "max": 200000
+          }
+        },
+        "assigned_to": {
+          "type": "string",
+          "description": "Driver or department assigned to vehicle",
+          "constraints": {
+            "required": true,
+            "max_length": 100
+          }
+        },
+        "total_services": {
+          "type": "integer",
+          "description": "Total number of maintenance services performed",
+          "constraints": {
+            "required": true,
+            "min": 0,
+            "max": 100
+          }
+        },
+        "total_cost": {
+          "type": "float",
+          "description": "Total maintenance cost (ILS) across vehicle lifetime",
+          "constraints": {
+            "required": true,
+            "min": 0,
+            "max": 50000,
+            "currency": "ILS"
+          }
+        },
+        "last_service_date": {
+          "type": "date",
+          "description": "Date of most recent maintenance service",
+          "constraints": {
+            "required": false,
+            "format": "YYYY-MM-DD"
+          }
+        }
+      },
+      "business_rules": [
+        "current_km must be >= initial_km",
+        "last_service_date must be >= purchase_date",
+        "total_services must match count of invoices for vehicle_id",
+        "Vehicle age (current_date - purchase_date) must be between 2-7 years"
+      ]
+    },
+    "invoices": {
+      "description": "Maintenance invoices - transactional service records",
+      "source": "database.invoices table",
+      "record_count_expected": 1012,
+      "required_fields": [
+        "invoice_id",
+        "vehicle_id",
+        "date",
+        "workshop",
+        "total",
+        "odometer_km"
+      ],
+      "fields": {
+        "invoice_id": {
+          "type": "integer",
+          "description": "Unique invoice identifier (primary key)",
+          "constraints": {
+            "required": true,
+            "unique": true,
+            "min": 1
+          }
+        },
+        "vehicle_id": {
+          "type": "integer",
+          "description": "Foreign key to vehicles.vehicle_id",
+          "constraints": {
+            "required": true,
+            "foreign_key": "vehicles.vehicle_id"
+          }
+        },
+        "date": {
+          "type": "date",
+          "description": "Invoice/service date",
+          "constraints": {
+            "required": true,
+            "format": "YYYY-MM-DD",
+            "min_date": "2019-01-01",
+            "max_date": "2025-12-31"
+          }
+        },
+        "workshop": {
+          "type": "string",
+          "description": "Service provider/workshop name",
+          "constraints": {
+            "required": true,
+            "allowed_values": [
+              "גראז' המרכז",
+              "שירות אקספרס",
+              "מוסך דוד",
+              "תיקונים מהירים",
+              "Auto Service Plus"
+            ]
+          }
+        },
+        "total": {
+          "type": "float",
+          "description": "Invoice total amount (ILS)",
+          "constraints": {
+            "required": true,
+            "min": 50,
+            "max": 5000,
+            "currency": "ILS"
+          }
+        },
+        "odometer_km": {
+          "type": "integer",
+          "description": "Odometer reading at service time",
+          "constraints": {
+            "required": true,
+            "min": 0,
+            "max": 200000
+          }
+        },
+        "description": {
+          "type": "string",
+          "description": "Service description",
+          "constraints": {
+            "required": false,
+            "max_length": 500
+          }
+        }
+      },
+      "business_rules": [
+        "date must be >= vehicle.purchase_date",
+        "odometer_km must be >= vehicle.initial_km",
+        "For same vehicle_id: later dates must have higher odometer_km",
+        "Workshop pricing should be within ±30% of fleet average"
+      ]
+    },
+    "features": {
+      "description": "Engineered ML features - output from Agent D (Feature Engineer)",
+      "source": "data/processed/features.csv",
+      "record_count_expected": 86,
+      "required_fields": [
+        "vehicle_id",
+        "vehicle_age_years",
+        "service_frequency_rate",
+        "monthly_maintenance_cost"
+      ],
+      "fields": {
+        "vehicle_id": {
+          "type": "integer",
+          "description": "Vehicle identifier (links to vehicles schema)",
+          "constraints": {
+            "required": true,
+            "unique": true,
+            "foreign_key": "vehicles.vehicle_id"
+          }
+        },
+        "plate": {
+          "type": "string",
+          "description": "Vehicle plate (for reference)",
+          "constraints": {
+            "required": true
+          }
+        },
+        "vehicle_age_years": {
+          "type": "float",
+          "description": "Vehicle age in years (current_date - purchase_date)",
+          "constraints": {
+            "required": true,
+            "min": 0.0,
+            "max": 7.0,
+            "decimal_places": 2
+          },
+          "ml_importance": "high",
+          "feature_type": "numerical"
+        },
+        "current_km": {
+          "type": "integer",
+          "description": "Current odometer reading",
+          "constraints": {
+            "required": true,
+            "min": 50,
+            "max": 40000
+          },
+          "ml_importance": "low",
+          "feature_type": "numerical"
+        },
+        "total_km_driven": {
+          "type": "integer",
+          "description": "Total kilometers driven (current_km - initial_km)",
+          "constraints": {
+            "required": true,
+            "min": 0,
+            "max": 150000
+          },
+          "ml_importance": "low",
+          "feature_type": "numerical"
+        },
+        "total_services": {
+          "type": "integer",
+          "description": "Total number of maintenance services",
+          "constraints": {
+            "required": true,
+            "min": 0,
+            "max": 50
+          },
+          "ml_importance": "low",
+          "feature_type": "numerical"
+        },
+        "avg_cost_per_service": {
+          "type": "float",
+          "description": "Average cost per service (total_cost / total_services)",
+          "constraints": {
+            "required": true,
+            "min": 0,
+            "max": 2000
+          },
+          "ml_importance": "medium",
+          "feature_type": "numerical"
+        },
+        "service_frequency_rate": {
+          "type": "float",
+          "description": "Services per year (total_services / vehicle_age_years)",
+          "constraints": {
+            "required": true,
+            "min": 0,
+            "max": 50
+          },
+          "ml_importance": "critical",
+          "feature_type": "numerical",
+          "notes": "Most important feature (90.82% importance) - drives cost predictions"
+        },
+        "km_per_month": {
+          "type": "float",
+          "description": "Average monthly mileage",
+          "constraints": {
+            "required": true,
+            "min": 0,
+            "max": 5000
+          },
+          "ml_importance": "low",
+          "feature_type": "numerical"
+        },
+        "days_since_last_service": {
+          "type": "integer",
+          "description": "Days elapsed since last service",
+          "constraints": {
+            "required": true,
+            "min": 0,
+            "max": 1000
+          },
+          "ml_importance": "low",
+          "feature_type": "numerical"
+        },
+        "months_since_purchase": {
+          "type": "float",
+          "description": "Months since vehicle purchase",
+          "constraints": {
+            "required": true,
+            "min": 0,
+            "max": 84
+          },
+          "ml_importance": "low",
+          "feature_type": "numerical"
+        },
+        "make_model_encoded": {
+          "type": "integer",
+          "description": "Label-encoded vehicle make/model",
+          "constraints": {
+            "required": true,
+            "min": 0,
+            "max": 20
+          },
+          "ml_importance": "low",
+          "feature_type": "categorical_encoded",
+          "encoding": "LabelEncoder",
+          "original_values": 8
+        },
+        "assigned_to_encoded": {
+          "type": "integer",
+          "description": "Label-encoded driver/assignment",
+          "constraints": {
+            "required": true,
+            "min": 0,
+            "max": 38
+          },
+          "ml_importance": "low",
+          "feature_type": "categorical_encoded",
+          "encoding": "LabelEncoder",
+          "original_values": 39
+        },
+        "monthly_maintenance_cost": {
+          "type": "float",
+          "description": "TARGET VARIABLE - Average monthly maintenance cost (ILS)",
+          "constraints": {
+            "required": true,
+            "min": 100,
+            "max": 3000,
+            "currency": "ILS"
+          },
+          "ml_importance": "target",
+          "feature_type": "numerical",
+          "notes": "Regression target - predicting this value is the core ML task"
+        },
+        "annual_cost": {
+          "type": "float",
+          "description": "Annual maintenance cost (for reference)",
+          "constraints": {
+            "required": true,
+            "min": 1200,
+            "max": 35000,
+            "currency": "ILS"
+          },
+          "ml_importance": "reference",
+          "feature_type": "numerical"
+        }
+      },
+      "business_rules": [
+        "monthly_maintenance_cost = annual_cost / 12",
+        "annual_cost = total_cost / vehicle_age_years",
+        "avg_cost_per_service = total_cost / total_services",
+        "service_frequency_rate = total_services / vehicle_age_years",
+        "Outlier removal: monthly_maintenance_cost must be < 10000 and > 0"
+      ]
+    }
+  },
+  "validation_rules": {
+    "data_quality": {
+      "completeness": {
+        "description": "All required fields must be present",
+        "threshold": 1.0,
+        "action_on_fail": "drop_row"
+      },
+      "uniqueness": {
+        "description": "Primary keys must be unique",
+        "fields": [
+          "vehicles.vehicle_id",
+          "vehicles.plate",
+          "invoices.invoice_id"
+        ],
+        "action_on_fail": "raise_error"
+      },
+      "validity": {
+        "description": "Values must conform to field constraints",
+        "checks": [
+          "Data types match schema",
+          "Values within min/max ranges",
+          "Dates in valid format",
+          "Foreign keys exist in parent tables"
+        ],
+        "action_on_fail": "drop_row"
+      },
+      "consistency": {
+        "description": "Cross-field business rules must hold",
+        "checks": [
+          "current_km >= initial_km",
+          "last_service_date >= purchase_date",
+          "invoice.date >= vehicle.purchase_date"
+        ],
+        "action_on_fail": "alert_and_fix"
+      }
+    },
+    "ml_validation": {
+      "feature_distribution": {
+        "description": "Features should follow expected distributions",
+        "checks": [
+          "No infinite values",
+          "No NaN in required fields",
+          "service_frequency_rate < 20 (max 20 services/year is reasonable)"
+        ]
+      },
+      "target_variable": {
+        "description": "Target variable validation",
+        "field": "monthly_maintenance_cost",
+        "checks": [
+          "No missing values",
+          "No negative values",
+          "< 10000 (outlier threshold)",
+          "> 0 (must have some cost)"
+        ],
+        "action_on_fail": "drop_row"
+      },
+      "train_test_split": {
+        "description": "Data split configuration",
+        "test_size": 0.2,
+        "random_state": 42,
+        "stratify": false,
+        "shuffle": true
+      }
+    },
+    "model_performance": {
+      "minimum_thresholds": {
+        "r2_score": 0.75,
+        "rmse": 500,
+        "mae": 400,
+        "mape": 15
+      },
+      "target_thresholds": {
+        "r2_score": 0.90,
+        "rmse": 50,
+        "mae": 30,
+        "mape": 10
+      },
+      "current_performance": {
+        "model": "GradientBoosting",
+        "r2_score": 0.9638,
+        "rmse": 16.72,
+        "mae": 13.88,
+        "mape": 5.54,
+        "status": "EXCEEDS_TARGET",
+        "evaluated_date": "2025-12-15"
+      }
+    }
+  },
+  "data_lineage": {
+    "raw_sources": [
+      {
+        "name": "vehicles table",
+        "type": "SQLite database",
+        "location": "data/fleet_management.db",
+        "last_updated": "2025-12-15"
+      },
+      {
+        "name": "invoices table",
+        "type": "SQLite database",
+        "location": "data/fleet_management.db",
+        "last_updated": "2025-12-15"
+      }
+    ],
+    "processing_pipeline": [
+      {
+        "step": 1,
+        "agent": "Crew 1 - Data Analyst",
+        "description": "Load, validate, and clean raw data",
+        "input": "database tables",
+        "output": "data/processed/fleet_data_cleaned.csv",
+        "validations": [
+          "Remove empty rows",
+          "Basic data type validation"
+        ]
+      },
+      {
+        "step": 2,
+        "agent": "Agent D - Feature Engineer",
+        "description": "Create engineered features for ML",
+        "input": "data/processed/fleet_data_cleaned.csv",
+        "output": "data/processed/features.csv",
+        "transformations": [
+          "Calculate vehicle_age_years",
+          "Calculate service_frequency_rate",
+          "Encode categorical variables",
+          "Create temporal features",
+          "Remove outliers (monthly_cost > 10000)"
+        ]
+      },
+      {
+        "step": 3,
+        "agent": "Agent E - Model Trainer",
+        "description": "Train regression models",
+        "input": "data/processed/features.csv",
+        "output": "models/model.pkl",
+        "operations": [
+          "Train/test split (80/20)",
+          "Train multiple models (RandomForest, GradientBoosting)",
+          "Select best model by R2 score"
+        ]
+      },
+      {
+        "step": 4,
+        "agent": "Agent F - Model Evaluator",
+        "description": "Evaluate model performance",
+        "input": "models/model.pkl + features.csv",
+        "output": "reports/evaluation_report.md",
+        "metrics": [
+          "R2, RMSE, MAE, MAPE",
+          "Feature importance analysis",
+          "Residual plots"
+        ]
+      }
+    ]
+  },
+  "usage_notes": {
+    "for_data_validation": "Use this contract with Agent A (Data Validator) to validate incoming data before ML pipeline",
+    "for_ml_pipeline": "Agent D uses feature constraints to engineer and validate features",
+    "for_model_monitoring": "Use model_performance thresholds to detect model degradation in production",
+    "for_documentation": "This contract serves as the single source of truth for data requirements"
+  },
+  "version_history": [
+    {
+      "version": "1.0.0",
+      "date": "2025-12-15",
+      "changes": "Initial dataset contract creation",
+      "author": "FleetGuard AI Development Team"
+    }
+  ]
+}

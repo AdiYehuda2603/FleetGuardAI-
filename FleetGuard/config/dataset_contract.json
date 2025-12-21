@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "description": "FleetGuard data validation schema for invoice uploads",
+  "critical_fields": [
+    "vehicle_id",
+    "date",
+    "odometer_km",
+    "workshop",
+    "total"
+  ],
+  "optional_fields": [
+    "plate",
+    "make_model",
+    "kind",
+    "invoice_no",
+    "subtotal",
+    "vat",
+    "pdf_file"
+  ],
+  "field_types": {
+    "vehicle_id": "string",
+    "date": "date",
+    "odometer_km": "integer",
+    "workshop": "string",
+    "total": "float",
+    "plate": "string",
+    "make_model": "string",
+    "kind": "string",
+    "invoice_no": "string",
+    "subtotal": "float",
+    "vat": "float"
+  },
+  "validation_rules": {
+    "odometer_km": {
+      "min": 0,
+      "max": 500000,
+      "description": "Odometer reading must be between 0 and 500,000 km"
+    },
+    "total": {
+      "min": 0,
+      "max": 50000,
+      "description": "Invoice total must be between 0 and 50,000 ILS"
+    },
+    "date": {
+      "format": "YYYY-MM-DD",
+      "description": "Date must be in ISO format (YYYY-MM-DD)"
+    },
+    "vehicle_id": {
+      "pattern": "^VH-\\d+$",
+      "description": "Vehicle ID must follow pattern VH-XX (e.g., VH-01)"
+    }
+  },
+  "enforcement_policy": {
+    "missing_critical_field": "DROP_ROW",
+    "invalid_value": "DROP_ROW",
+    "missing_optional_field": "WARN",
+    "log_all_violations": true
+  }
+}

@@ -1,0 +1,106 @@
+FleetGuardAI/
+│
+├── setup_project.py
+├── implementation_plan.md
+│
+├── .claude/
+│   └── settings.local.json
+│
+├── FleetGuard/                          # Main Application
+│   │
+│   ├── main.py                          # ⭐ Streamlit Dashboard (Run: streamlit run main.py)
+│   ├── generate_data.py                 # ⭐ Data Generator (Run: python generate_data.py)
+│   ├── dashboard_backup.py
+│   │
+│   ├── .env                             # Environment variables (API keys)
+│   ├── .env.example
+│   ├── .gitignore
+│   ├── requirements.txt                 # Python dependencies
+│   │
+│   ├── Documentation/
+│   │   ├── ACTIVATION_GUIDE.md
+│   │   ├── CREWAI_README.md
+│   │   ├── ENV_SETUP_GUIDE.md
+│   │   ├── FIX_SUMMARY.md
+│   │   ├── FIXES_SUMMARY.md
+│   │   └── PREDICTION_FEATURES.md
+│   │
+│   ├── src/                             # Source Code Modules
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── ai_engine.py                # OpenAI integration
+│   │   ├── database_manager.py         # Database operations
+│   │   ├── crew_orchestrator.py        # CrewAI orchestration
+│   │   ├── crewai_agents.py           # AI agent definitions
+│   │   ├── crewai_tasks.py            # AI task definitions
+│   │   ├── extractor.py               # Data extraction
+│   │   ├── predictive_agent.py        # Predictive analytics
+│   │   ├── test_price.py
+│   │   └── utils/                      # Utility functions
+│   │
+│   ├── config/
+│   │   └── dataset_contract.json
+│   │
+│   ├── data/                            # Data Storage
+│   │   ├── database/
+│   │   │   ├── fleet.db               # SQLite database (85 vehicles)
+│   │   │   └── invoices.csv           # CSV export
+│   │   │
+│   │   ├── raw_invoices/              # ~1000 PDF invoices
+│   │   │   ├── INV-xxxxxxxx_VH-xx.pdf (x ~1000 files)
+│   │   │   └── ...
+│   │   │
+│   │   ├── processed/                 # Processed data
+│   │   ├── models/                    # ML models
+│   │   ├── reports/                   # Generated reports
+│   │   └── uploads/                   # User uploads
+│   │
+│   ├── notebooks/                      # Jupyter notebooks
+│   │
+│   ├── fleetguard_price_bias_he/      # Dataset
+│   │
+│   ├── fleetguard_price_bias_dataset_hebrew.zip
+│   │
+│   └── venv/                           # Virtual environment (excluded from copy)
+│       └── (Python packages - recreate with pip install -r requirements.txt)
+│
+├── venv/                                # Root venv (excluded)
+│
+└── fleetguard_price_bias_he/           # Dataset directory
+
+
+═══════════════════════════════════════════════════════════════════
+KEY FILES & COMMANDS
+═══════════════════════════════════════════════════════════════════
+
+📱 RUN THE APP:
+   cd FleetGuard
+   streamlit run main.py
+
+🔧 GENERATE DATA:
+   cd FleetGuard
+   python generate_data.py
+
+📦 SETUP FROM SCRATCH:
+   cd FleetGuard
+   python -m venv venv
+   venv\Scripts\activate          (Windows)
+   source venv/bin/activate       (Mac/Linux)
+   pip install -r requirements.txt
+   python generate_data.py
+   streamlit run main.py
+
+═══════════════════════════════════════════════════════════════════
+PROJECT STATS
+═══════════════════════════════════════════════════════════════════
+
+✓ 85 Vehicles in fleet
+✓ ~1000 Invoices generated
+✓ ~1000 PDF files created
+✓ SQLite database with 3 tables (vehicles, invoices, invoice_lines)
+✓ Hebrew language support (RTL)
+✓ AI-powered analytics (OpenAI)
+✓ Multi-agent system (CrewAI)
+✓ Interactive dashboard (Streamlit + Plotly)
+
+═══════════════════════════════════════════════════════════════════

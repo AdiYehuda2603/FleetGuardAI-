@@ -1,0 +1,254 @@
+{
+  "project_name": "FleetGuardAI",
+  "description": "Fleet management AI system with Hebrew support",
+  "created": "2024-12-14",
+  "structure": {
+    "root": {
+      "files": [
+        "setup_project.py",
+        "implementation_plan.md"
+      ],
+      "folders": {
+        "FleetGuard": {
+          "description": "Main application directory",
+          "files": [
+            "main.py",
+            "generate_data.py",
+            "dashboard_backup.py",
+            ".env",
+            ".env.example",
+            ".gitignore",
+            "requirements.txt",
+            "ACTIVATION_GUIDE.md",
+            "CREWAI_README.md",
+            "ENV_SETUP_GUIDE.md",
+            "FIX_SUMMARY.md",
+            "FIXES_SUMMARY.md",
+            "PREDICTION_FEATURES.md",
+            "fleetguard_price_bias_dataset_hebrew.zip"
+          ],
+          "folders": {
+            "src": {
+              "description": "Source code modules",
+              "files": [
+                "__init__.py",
+                "config.py",
+                "ai_engine.py",
+                "database_manager.py",
+                "crew_orchestrator.py",
+                "crewai_agents.py",
+                "crewai_tasks.py",
+                "extractor.py",
+                "predictive_agent.py",
+                "test_price.py"
+              ],
+              "folders": {
+                "utils": {
+                  "description": "Utility functions"
+                }
+              }
+            },
+            "config": {
+              "description": "Configuration files",
+              "files": [
+                "dataset_contract.json"
+              ]
+            },
+            "data": {
+              "description": "Data storage directory",
+              "folders": {
+                "database": {
+                  "description": "SQLite database and CSV files",
+                  "files": [
+                    "fleet.db",
+                    "invoices.csv"
+                  ]
+                },
+                "raw_invoices": {
+                  "description": "Generated PDF invoices",
+                  "note": "Contains ~1000 PDF invoice files",
+                  "file_pattern": "INV-*.pdf",
+                  "file_count": "~1000 files"
+                },
+                "processed": {
+                  "description": "Processed data files"
+                },
+                "models": {
+                  "description": "ML model files"
+                },
+                "reports": {
+                  "description": "Generated reports"
+                },
+                "uploads": {
+                  "description": "User uploaded files"
+                }
+              }
+            },
+            "notebooks": {
+              "description": "Jupyter notebooks for analysis"
+            },
+            "fleetguard_price_bias_he": {
+              "description": "Hebrew price bias dataset"
+            },
+            "venv": {
+              "description": "Python virtual environment (excluded from backup)",
+              "note": "Recreate using: python -m venv venv && pip install -r requirements.txt"
+            }
+          }
+        },
+        "venv": {
+          "description": "Root level virtual environment (excluded)",
+          "note": "Recreate using requirements.txt"
+        },
+        ".claude": {
+          "description": "Claude Code configuration",
+          "files": [
+            "settings.local.json"
+          ]
+        },
+        "fleetguard_price_bias_he": {
+          "description": "Dataset directory"
+        }
+      }
+    }
+  },
+  "key_files": {
+    "main.py": {
+      "purpose": "Streamlit dashboard - main application entry point",
+      "run_command": "streamlit run main.py",
+      "language": "Python",
+      "framework": "Streamlit"
+    },
+    "generate_data.py": {
+      "purpose": "Generates test data (invoices, PDFs, database)",
+      "run_command": "python generate_data.py",
+      "output": "Creates ~1000 invoices with PDFs and SQLite database"
+    },
+    "src/database_manager.py": {
+      "purpose": "Database operations and queries",
+      "database": "SQLite (fleet.db)"
+    },
+    "src/ai_engine.py": {
+      "purpose": "AI analyst engine using OpenAI",
+      "requires": "OpenAI API key"
+    },
+    "src/crew_orchestrator.py": {
+      "purpose": "CrewAI orchestration for multi-agent tasks"
+    },
+    "src/crewai_agents.py": {
+      "purpose": "CrewAI agent definitions"
+    },
+    "src/crewai_tasks.py": {
+      "purpose": "CrewAI task definitions"
+    },
+    "src/predictive_agent.py": {
+      "purpose": "Predictive analytics for fleet maintenance"
+    },
+    "src/extractor.py": {
+      "purpose": "Data extraction utilities"
+    }
+  },
+  "dependencies": {
+    "python_version": "3.8+",
+    "main_packages": [
+      "streamlit",
+      "pandas",
+      "plotly",
+      "sqlite3",
+      "reportlab",
+      "bidi",
+      "openai",
+      "crewai",
+      "langchain"
+    ],
+    "install_command": "pip install -r requirements.txt"
+  },
+  "database_schema": {
+    "tables": {
+      "vehicles": {
+        "columns": [
+          "vehicle_id (TEXT PRIMARY KEY)",
+          "plate (TEXT)",
+          "make_model (TEXT)",
+          "year (INTEGER)",
+          "fleet_entry_date (TEXT)",
+          "initial_km (INTEGER)",
+          "status (TEXT)"
+        ]
+      },
+      "invoices": {
+        "columns": [
+          "invoice_no (TEXT PRIMARY KEY)",
+          "date (TEXT)",
+          "workshop (TEXT)",
+          "vehicle_id (TEXT)",
+          "plate (TEXT)",
+          "make_model (TEXT)",
+          "odometer_km (INTEGER)",
+          "kind (TEXT)",
+          "subtotal (REAL)",
+          "vat (REAL)",
+          "total (REAL)",
+          "pdf_file (TEXT)"
+        ]
+      },
+      "invoice_lines": {
+        "columns": [
+          "invoice_no (TEXT)",
+          "line_no (INTEGER)",
+          "description (TEXT)",
+          "type (TEXT)",
+          "qty (REAL)",
+          "unit_price (REAL)",
+          "line_total (REAL)"
+        ]
+      }
+    }
+  },
+  "setup_instructions": {
+    "step1": "Create virtual environment: python -m venv venv",
+    "step2": "Activate virtual environment",
+    "step3": "Install dependencies: pip install -r requirements.txt",
+    "step4": "Generate data: python generate_data.py",
+    "step5": "Run application: streamlit run main.py",
+    "optional": "Set OpenAI API key in .env file for AI features"
+  },
+  "features": {
+    "dashboard": [
+      "RTL Hebrew support",
+      "Fleet KPIs and metrics",
+      "Interactive charts (Plotly)",
+      "Workshop cost analysis",
+      "Vehicle expense tracking",
+      "Anomaly detection"
+    ],
+    "ai_analyst": [
+      "Natural language queries in Hebrew",
+      "OpenAI-powered insights",
+      "Chat interface",
+      "Data analysis"
+    ],
+    "data_generation": [
+      "Synthetic invoice generation",
+      "Hebrew PDF creation",
+      "Price bias simulation",
+      "85 vehicles, ~1000 invoices",
+      "SQLite database population"
+    ],
+    "crewai": [
+      "Multi-agent orchestration",
+      "Predictive maintenance",
+      "Price optimization",
+      "Workshop analysis"
+    ]
+  },
+  "notes": {
+    "language": "Primary language is Hebrew (RTL support)",
+    "data": "All data is synthetic/test data only",
+    "environment": "Requires .env file with API keys",
+    "recent_fixes": [
+      "Fixed pandas deprecation: resample('M') -> resample('ME')",
+      "Fixed Streamlit deprecation: use_container_width -> width='stretch'"
+    ]
+  }
+}

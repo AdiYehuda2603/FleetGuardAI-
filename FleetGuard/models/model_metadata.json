@@ -1,0 +1,31 @@
+{
+  "model_name": "GradientBoosting",
+  "train_r2": 0.9999999647513973,
+  "test_r2": 0.9688400779768702,
+  "rmse": 16.243086247213412,
+  "mae": 11.494257944886368,
+  "features": [
+    "vehicle_age_years",
+    "current_km",
+    "total_km_driven",
+    "total_services",
+    "avg_cost_per_service",
+    "service_frequency_rate",
+    "km_per_month",
+    "days_since_last_service",
+    "months_since_purchase",
+    "make_model_encoded",
+    "assigned_to_encoded"
+  ],
+  "target_variable": "monthly_maintenance_cost",
+  "train_date": "2025-12-17 20:33:59",
+  "training_samples": 68,
+  "test_samples": 18,
+  "recommendations": [
+    "[OK] המודל מוכן לפרודקשן - דיוק מעולה!",
+    "המודל מסביר 96.9% מהשונות בעלויות",
+    "[INFO] דיוק תחזית ממוצע: ±₪11 לחודש",
+    "[OK] דיוק תחזית מצוין - מתאים לתקצוב מדויק",
+    "[OK] שגיאות קיצוניות נמוכות - המודל יציב"
+  ]
+}

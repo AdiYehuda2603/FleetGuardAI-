@@ -1,0 +1,120 @@
+# ========================================
+# FleetGuard AI - Git Ignore Configuration
+# ========================================
+
+# Environment Variables & Secrets (CRITICAL!)
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+credentials.json
+service_account.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Database Files (keep structure, ignore data)
+data/database/*.db
+data/database/*.sqlite
+data/database/*.sqlite3
+!data/database/.gitkeep
+
+# Data Files (keep structure, ignore content)
+data/raw/*.csv
+data/raw/*.xlsx
+data/processed/*.csv
+!data/processed/.gitkeep
+
+# Model Artifacts (large binary files)
+models/*.pkl
+models/*.joblib
+models/*.h5
+models/*.pt
+models/*.pth
+!models/.gitkeep
+!models/model_metadata.json
+!models/models_comparison.json
+!models/model_card.md
+
+# Reports (optional - can regenerate)
+reports/*.html
+reports/*.pdf
+!reports/*.md
+!reports/.gitkeep
+
+# Streamlit
+.streamlit/secrets.toml
+.streamlit/cache/
+
+# OS Specific
+.DS_Store
+Thumbs.db
+desktop.ini
+*.bak
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Temporary Files
+*.tmp
+*.swp
+tmp/
+temp/
+
+# Compressed Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Windows Reserved Names (created by accident)
+nul
+NUL

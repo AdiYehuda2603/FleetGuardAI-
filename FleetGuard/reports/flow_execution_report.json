@@ -1,0 +1,107 @@
+{
+  "flow_name": "FleetGuard AI Multi-Crew Flow",
+  "flow_version": "1.0.0",
+  "start_time": "2025-12-17T20:33:59.345819",
+  "end_time": "2025-12-17T20:34:00.781684",
+  "total_duration": null,
+  "status": "SUCCESS",
+  "crews": {
+    "crew1": {
+      "status": "SUCCESS",
+      "result": {
+        "status": "SUCCESS",
+        "execution_time": "0.02 seconds",
+        "steps": {
+          "data_loading": {
+            "status": "SUCCESS",
+            "vehicles": 86,
+            "invoices": 1013
+          },
+          "data_validation": {
+            "status": "SUCCESS",
+            "clean_records": 86,
+            "removed": 0
+          },
+          "analysis_reports": {
+            "status": "SUCCESS",
+            "vehicle_report": "reports/vehicle_analysis.json",
+            "driver_report": "reports/driver_analysis.json",
+            "maintenance_report": "reports/maintenance_analysis.json"
+          }
+        }
+      }
+    },
+    "crew2": {
+      "status": "SUCCESS",
+      "result": {
+        "crew_name": "Data Scientist Crew",
+        "crew_id": "CREW_2",
+        "execution_time": "1.41 seconds",
+        "status": "SUCCESS",
+        "steps": {
+          "feature_engineering": {
+            "status": "SUCCESS",
+            "output_file": "data/processed/features.csv",
+            "num_records": 86,
+            "num_features": 15,
+            "target_variable": "monthly_maintenance_cost"
+          },
+          "model_training": {
+            "status": "SUCCESS",
+            "best_model_name": "GradientBoosting",
+            "model_path": "models\\model.pkl",
+            "test_r2": 0.9688400779768702,
+            "train_r2": 0.9999999647513973,
+            "rmse": 16.243086247213412,
+            "mae": 11.494257944886368,
+            "ready_for_production": true,
+            "recommendations": [
+              "[OK] המודל מוכן לפרודקשן - דיוק מעולה!",
+              "המודל מסביר 96.9% מהשונות בעלויות",
+              "[INFO] דיוק תחזית ממוצע: ±₪11 לחודש",
+              "[OK] דיוק תחזית מצוין - מתאים לתקצוב מדויק",
+              "[OK] שגיאות קיצוניות נמוכות - המודל יציב"
+            ]
+          },
+          "model_evaluation": {
+            "status": "SUCCESS",
+            "evaluation_status": "PASS",
+            "report_path": "reports\\evaluation_report.md",
+            "metrics": {
+              "r2_score": 0.9688400779768702,
+              "rmse": 16.243086247213412,
+              "mae": 11.494257944886368,
+              "mape": 4.444236599419364,
+              "mean_prediction": 241.04848515624087,
+              "std_prediction": 84.4806899982987,
+              "mean_actual": 244.56277777777774,
+              "std_actual": 92.01748715480092,
+              "min_error": -15.036970727901974,
+              "max_error": 50.48936595426488
+            },
+            "plots": {
+              "residual": "reports\\residual_plot.png",
+              "importance": "reports\\feature_importance.png"
+            }
+          }
+        },
+        "start_time": "2025-12-17T20:33:59.370121",
+        "end_time": "2025-12-17T20:34:00.779509"
+      }
+    }
+  },
+  "validation_checkpoints": {
+    "crew1_output": {
+      "passed": true,
+      "processed_data_size": 14752,
+      "reports_count": 3
+    },
+    "crew2_output": {
+      "passed": true,
+      "model_r2": 0.9688400779768702,
+      "model_rmse": 16.243086247213412,
+      "model_name": "GradientBoosting"
+    }
+  },
+  "final_outputs": {}
+}

@@ -1,0 +1,16 @@
+vehicle_id,plate,make_model,year
+VH-01,TEST-563-81,Skoda Octavia,2021
+VH-02,TEST-620-85,Hyundai i10,2019
+VH-03,TEST-923-75,Skoda Octavia,2022
+VH-04,TEST-912-33,Toyota Corolla,2021
+VH-05,TEST-410-28,Toyota Corolla,2022
+VH-06,TEST-929-98,Toyota Corolla,2022
+VH-07,TEST-505-67,Ford Transit,2019
+VH-08,TEST-738-11,Ford Transit,2018
+VH-09,TEST-160-14,Hyundai i10,2019
+VH-10,TEST-714-13,Skoda Octavia,2020
+VH-11,TEST-551-85,Hyundai i10,2022
+VH-12,TEST-339-91,Kia Niro,2021
+VH-13,TEST-104-94,Toyota Corolla,2021
+VH-14,TEST-770-45,Skoda Octavia,2022
+VH-15,TEST-960-20,Kia Niro,2020
