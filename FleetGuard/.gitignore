@@ -127,3 +127,21 @@ NUL
 *INVENTORY*.md
 *SUMMARY*.md
 implementation_plan.md
+
+# Guidance and instruction files (keep locally, not in GitHub)
+HOW_TO_RUN.md
+START_HERE.md
+QUICK_START*.md
+FIX_*.md
+ABOUT_*.md
+ANSWERS_*.md
+*README*.md
+TEST_REPORT.md
+PREDICTION_FEATURES.md
+DATA_STRUCTURE_ANALYSIS.md
+DATABASE_ACCESS_FOR_AGENTS.md
+CREWAI_FIXED.md
+
+# Keep technical documentation
+!models/model_card.md
+!reports/*.md
