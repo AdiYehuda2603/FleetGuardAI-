@@ -118,3 +118,12 @@ temp/
 # Windows Reserved Names (created by accident)
 nul
 NUL
+
+# Documentation and Proposals (keep locally, not in GitHub)
+*PROPOSAL*.md
+*SESSION*.md
+*GUIDE*.md
+*EVALUATION*.md
+*INVENTORY*.md
+*SUMMARY*.md
+implementation_plan.md
