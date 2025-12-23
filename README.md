@@ -23,6 +23,21 @@ FleetGuardAI is an industry-simulated AI product workflow that combines **CrewAI
 
 ---
 
+## ⚡ TL;DR - Quick Summary (For Reviewers)
+
+**What:** AI-powered fleet management system using CrewAI multi-agent architecture
+**Problem:** Unpredictable maintenance costs, inefficient vehicle replacement decisions
+**Solution:** 2 Crews (6 Agents) → Data Analysis → ML Prediction (R²=0.9638) → Interactive Dashboard
+**Tech Stack:** Python, CrewAI, Streamlit, scikit-learn, OpenAI GPT-4o-mini
+**Dataset:** 85 vehicles, 1,012 maintenance invoices (real fleet data)
+**Model:** Gradient Boosting Regressor | RMSE: ₪16.72 | MAE: ₪13.88 | MAPE: 5.54%
+**Impact:** 15-25% cost reduction through predictive maintenance
+**Deliverables:** ✅ All required outputs (clean_data.csv, features.csv, model.pkl, reports, model_card.md)
+
+**Key Innovation:** Dataset contract validation between crews ensures data quality pipeline integrity.
+
+---
+
 ## 📋 Table of Contents
 
 - [Overview](#overview)
@@ -128,7 +143,7 @@ FleetGuardAI implements a **two-crew multi-agent architecture** coordinated by C
                   ┌───────────────────────┐
                   │  STREAMLIT DASHBOARD  │
                   │  • KPIs & Charts      │
-                  │  • AI Chatbot (GPT-4) │
+                  │  • AI Chatbot (GPT-4o-mini) │
                   │  • Alerts & Rules     │
                   └───────────────────────┘
 ```
@@ -137,9 +152,9 @@ FleetGuardAI implements a **two-crew multi-agent architecture** coordinated by C
 
 | Agent | Role | Responsibilities | Outputs |
 |-------|------|------------------|---------|
-| **Agent D** | Feature Engineer | Engineer ML-ready features from raw data | `features.csv` |
-| **Agent E** | Model Trainer | Train regression models (RF, GBM, XGBoost) | `model.pkl` |
-| **Agent F** | Model Evaluator | Evaluate performance & generate reports | `evaluation_report.md`, `model_card.md` |
+| **Agent A** | Data Validation Specialist | Ingest, validate, and clean raw fleet data | `clean_data.csv`, `dataset_contract.json` |
+| **Agent B** | EDA Analyst | Perform exploratory data analysis and visualization | `eda_report.html` |
+| **Agent C** | Business Insights Generator | Extract business insights and recommendations | `insights.md` |
 
 **Crew 1 Goal:** Clean, validate, and explore fleet data to establish business understanding.
 
@@ -245,7 +260,7 @@ FleetGuardAI implements a **two-crew multi-agent architecture** coordinated by C
 - **joblib** - Model serialization
 
 ### AI Integration
-- **OpenAI API** - GPT-4o-mini for chatbot
+- **OpenAI GPT-4o-mini API** - Natural language chatbot
 - **python-openai** (≥ 1.0.0) - API client
 
 ### Utilities
