@@ -34,6 +34,31 @@ except ImportError:
     st.error("❌ לא מצליח למצוא את תיקיית src. וודא שאתה מריץ את הפקודה מתיקיית FleetGuard.")
     st.stop()
 
+
+# ===== Cached Resources =====
+@st.cache_resource
+def load_ml_predictor():
+    """
+    Load and cache the ML predictor model.
+    This function is cached so the model is loaded only once across all sessions.
+
+    Returns:
+        MLPredictor: Loaded predictor instance or None if loading fails
+    """
+    try:
+        from src.ml_predictor import MLPredictor
+        predictor = MLPredictor()
+        if predictor.model:
+            print("[CACHE] ML Predictor loaded and cached successfully")
+            return predictor
+        else:
+            print("[CACHE] ML Predictor model failed to load")
+            return None
+    except Exception as e:
+        print(f"[CACHE ERROR] Failed to load ML Predictor: {e}")
+        return None
+
+
 # אתחול מנהל Authentication
 auth = AuthManager()
 
@@ -641,12 +666,10 @@ with tab3:
     st.markdown("---")
 
     try:
-        from src.ml_predictor import MLPredictor
+        # טעינת מודל מוקש (cached)
+        predictor = load_ml_predictor()
 
-        # טעינת מודל
-        predictor = MLPredictor()
-
-        if predictor.model:
+        if predictor and predictor.model:
             # מידע על המודל
             model_info = predictor.get_model_info()
 

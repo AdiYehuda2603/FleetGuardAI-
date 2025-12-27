@@ -212,7 +212,8 @@ class EmailFetcher:
             pass
 
         # Encode to IMAP modified UTF-7 (RFC 3501)
-        # This is specifically tested with Hebrew characters
+        # Standard IMAP modified UTF-7 uses '+' and '/' from base64 as-is
+        # Only the shift character '&' and terminator '-' are special
         try:
             import base64
 
@@ -221,91 +222,41 @@ class EmailFetcher:
             shift_buffer = []
 
             for c in folder_name:
-                # ASCII printable (0x20-0x7E) except & goes through directly
+                # ASCII printable characters (0x20-0x7E)
                 if 0x20 <= ord(c) <= 0x7E:
                     if c == '&':
-                        # End any shift sequence first
-                        if in_shift:
-                            if shift_buffer:
-                                # Encode buffered Unicode characters to UTF-16BE
-                                utf16_bytes = ''.join(shift_buffer).encode('utf-16-be')
-                                # Base64 encode
-                                b64 = base64.b64encode(utf16_bytes).decode('ascii')
-                                # Remove padding and replace / with ,
-                                b64 = b64.rstrip('=').replace('/', ',')
-                                out.append(f'&{b64}-')
-                                shift_buffer = []
-                            in_shift = False
+                        # End any active shift sequence first
+                        if in_shift and shift_buffer:
+                            utf16_bytes = ''.join(shift_buffer).encode('utf-16-be')
+                            b64 = base64.b64encode(utf16_bytes).decode('ascii').rstrip('=')
+                            out.append(f'&{b64}-')
+                            shift_buffer = []
+                        in_shift = False
                         # Literal & is encoded as &-
                         out.append('&-')
                     else:
-                        # Regular ASCII character
-                        # End shift if active
-                        if in_shift:
-                            if shift_buffer:
-                                utf16_bytes = ''.join(shift_buffer).encode('utf-16-be')
-                                b64 = base64.b64encode(utf16_bytes).decode('ascii')
-                                b64 = b64.rstrip('=').replace('/', ',')
-                                out.append(f'&{b64}-')
-                                shift_buffer = []
-                            in_shift = False
+                        # Regular ASCII character - end shift if active
+                        if in_shift and shift_buffer:
+                            utf16_bytes = ''.join(shift_buffer).encode('utf-16-be')
+                            b64 = base64.b64encode(utf16_bytes).decode('ascii').rstrip('=')
+                            out.append(f'&{b64}-')
+                            shift_buffer = []
+                        in_shift = False
                         out.append(c)
                 else:
                     # Non-ASCII character (Hebrew, etc.) - needs encoding
-                    if not in_shift:
-                        in_shift = True
+                    in_shift = True
                     shift_buffer.append(c)
 
             # Flush any remaining shift buffer
             if in_shift and shift_buffer:
                 utf16_bytes = ''.join(shift_buffer).encode('utf-16-be')
-                b64 = base64.b64encode(utf16_bytes).decode('ascii')
-                b64 = b64.rstrip('=').replace('/', ',')
+                b64 = base64.b64encode(utf16_bytes).decode('ascii').rstrip('=')
                 out.append(f'&{b64}-')
 
             encoded = ''.join(out)
             logger.info(f"IMAP UTF-7 encoding: '{folder_name}' -> '{encoded}'")
-
-            # IMPORTANT FIX: Gmail/IMAP doesn't actually use comma replacement
-            # The standard modified UTF-7 for IMAP uses '+' and '/' from base64 as-is
-            # Only the shift character '&' and terminator '-' are special
-            # Let's try the correct encoding:
-
-            # Re-encode properly without comma replacement
-            out2 = []
-            in_shift2 = False
-            shift_buffer2 = []
-
-            for c in folder_name:
-                if 0x20 <= ord(c) <= 0x7E:
-                    if c == '&':
-                        if in_shift2 and shift_buffer2:
-                            utf16_bytes = ''.join(shift_buffer2).encode('utf-16-be')
-                            b64 = base64.b64encode(utf16_bytes).decode('ascii').rstrip('=')
-                            out2.append(f'&{b64}-')
-                            shift_buffer2 = []
-                        in_shift2 = False
-                        out2.append('&-')
-                    else:
-                        if in_shift2 and shift_buffer2:
-                            utf16_bytes = ''.join(shift_buffer2).encode('utf-16-be')
-                            b64 = base64.b64encode(utf16_bytes).decode('ascii').rstrip('=')
-                            out2.append(f'&{b64}-')
-                            shift_buffer2 = []
-                        in_shift2 = False
-                        out2.append(c)
-                else:
-                    in_shift2 = True
-                    shift_buffer2.append(c)
-
-            if in_shift2 and shift_buffer2:
-                utf16_bytes = ''.join(shift_buffer2).encode('utf-16-be')
-                b64 = base64.b64encode(utf16_bytes).decode('ascii').rstrip('=')
-                out2.append(f'&{b64}-')
-
-            encoded_correct = ''.join(out2)
-            logger.info(f"IMAP UTF-7 encoding (corrected): '{folder_name}' -> '{encoded_correct}'")
-            return encoded_correct
+            return encoded
 
         except Exception as e:
             logger.error(f"Failed to encode folder name '{folder_name}': {e}")
