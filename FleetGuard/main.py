@@ -270,12 +270,11 @@ with st.sidebar:
         filtered_df = pd.DataFrame()
 
 # --- לשוניות ראשיות (Tabs) ---
-tab1, tab2, tab_rules, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
+tab1, tab2, tab_rules, tab3, tab5, tab6, tab7, tab8, tab9 = st.tabs([
     "📊 לוח בקרה (Dashboard)",
     "🤖 צ'אט אנליסט (AI)",
     "🚨 התראות חכמות (Rules Engine)",
     "🎯 תחזיות ML (AI Predictions)",
-    "📈 ביצועי מודל (Model Performance)",
     "📋 נתונים גולמיים",
     "⚙️ ניהול נתונים",
     "🔍 דפוסי תחזוקה",
@@ -434,7 +433,7 @@ with tab_rules:
                 st.error(f"🚨 **{len(urgent_alerts)} התראות דחופות** - טיפול מיידי נדרש!")
 
                 for alert in urgent_alerts:
-                    with st.expander(f"🚗 {alert['plate']} - {alert['message']}", expanded=True):
+                    with st.expander(f"🚗 {alert['plate']} - {alert['message']}", expanded=False):
                         st.markdown(f"**רכב:** {alert['vehicle_id']}")
                         st.markdown(f"**כלל:** {alert['rule_name']}")
                         st.markdown(f"**המלצה:** {alert['recommendation']}")
@@ -470,6 +469,122 @@ with tab_rules:
                         st.markdown(f"**🚗 {alert['plate']}** - {alert['message']}")
                         st.markdown(f"   └─ {alert['recommendation']}")
                         st.markdown("---")
+
+            # Custom Alerts Section
+            st.markdown("---")
+            st.subheader("📌 התראות מותאמות אישית")
+
+            col_custom1, col_custom2 = st.columns([2, 1])
+
+            with col_custom1:
+                with st.expander("➕ הוסף התראה מותאמת אישית", expanded=False):
+                    st.markdown("**צור התראה מותאמת אישית לרכב ספציפי**")
+
+                    # Vehicle selection for custom alert
+                    custom_vehicle = st.selectbox(
+                        "בחר רכב",
+                        vehicles_df['vehicle_id'].tolist(),
+                        key="custom_alert_vehicle"
+                    )
+
+                    # Alert details
+                    custom_title = st.text_input(
+                        "כותרת ההתראה",
+                        placeholder="לדוגמה: ביטוח מסתיים בקרוב",
+                        key="custom_alert_title"
+                    )
+
+                    custom_message = st.text_area(
+                        "תוכן ההתראה",
+                        placeholder="תיאור מפורט של ההתראה...",
+                        key="custom_alert_message"
+                    )
+
+                    col_sev, col_date = st.columns(2)
+
+                    with col_sev:
+                        custom_severity = st.selectbox(
+                            "רמת חומרה",
+                            ["INFO", "WARNING", "URGENT"],
+                            key="custom_alert_severity"
+                        )
+
+                    with col_date:
+                        custom_due_date = st.date_input(
+                            "תאריך יעד (אופציונלי)",
+                            value=None,
+                            key="custom_alert_due_date"
+                        )
+
+                    custom_notes = st.text_input(
+                        "הערות נוספות (אופציונלי)",
+                        key="custom_alert_notes"
+                    )
+
+                    if st.button("✅ שמור התראה", key="save_custom_alert"):
+                        if custom_title and custom_message:
+                            try:
+                                alert_data = {
+                                    'vehicle_id': custom_vehicle,
+                                    'alert_title': custom_title,
+                                    'alert_message': custom_message,
+                                    'severity': custom_severity,
+                                    'created_by': st.session_state.get('username', 'system'),
+                                    'due_date': str(custom_due_date) if custom_due_date else None,
+                                    'notes': custom_notes if custom_notes else None
+                                }
+
+                                alert_id = db.add_custom_alert(alert_data)
+                                st.success(f"✅ ההתראה נשמרה בהצלחה! (ID: {alert_id})")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"❌ שגיאה בשמירת ההתראה: {str(e)}")
+                        else:
+                            st.warning("⚠️ אנא מלא כותרת ותוכן להתראה")
+
+            with col_custom2:
+                # Display count of custom alerts
+                try:
+                    all_custom_alerts = db.get_custom_alerts(active_only=True)
+                    st.metric("📌 התראות מותאמות פעילות", len(all_custom_alerts))
+                except:
+                    st.metric("📌 התראות מותאמות פעילות", 0)
+
+            # Display existing custom alerts
+            with st.expander("📋 נהל התראות מותאמות אישית", expanded=False):
+                try:
+                    custom_alerts_df = db.get_custom_alerts(active_only=True)
+
+                    if not custom_alerts_df.empty:
+                        for idx, alert in custom_alerts_df.iterrows():
+                            severity_emoji = {
+                                'URGENT': '🚨',
+                                'WARNING': '⚠️',
+                                'INFO': 'ℹ️'
+                            }
+
+                            col_a, col_b = st.columns([4, 1])
+
+                            with col_a:
+                                st.markdown(f"{severity_emoji.get(alert['severity'], '📌')} **{alert['alert_title']}** - {alert['vehicle_id']}")
+                                st.caption(f"{alert['alert_message']}")
+                                if alert['due_date']:
+                                    st.caption(f"📅 תאריך יעד: {alert['due_date']}")
+
+                            with col_b:
+                                if st.button("🗑️ מחק", key=f"delete_custom_{alert['alert_id']}"):
+                                    try:
+                                        db.delete_custom_alert(alert['alert_id'])
+                                        st.success("✅ ההתראה נמחקה")
+                                        st.rerun()
+                                    except Exception as e:
+                                        st.error(f"❌ שגיאה: {str(e)}")
+
+                            st.markdown("---")
+                    else:
+                        st.info("ℹ️ אין התראות מותאמות אישית")
+                except Exception as e:
+                    st.error(f"❌ שגיאה בטעינת התראות: {str(e)}")
 
             # Show rule thresholds
             st.markdown("---")
@@ -690,6 +805,41 @@ with tab3:
                                                                 st.markdown(f"   └─ {alert['recommendation']}")
                                                                 st.markdown("---")
 
+                                                    # Quick add custom alert
+                                                    with st.expander("➕ הוסף התראה מהירה לרכב זה"):
+                                                        quick_title = st.text_input(
+                                                            "כותרת",
+                                                            key=f"quick_alert_title_{selected_vehicle}",
+                                                            placeholder="לדוגמה: ביטוח מסתיים"
+                                                        )
+                                                        quick_message = st.text_input(
+                                                            "תוכן",
+                                                            key=f"quick_alert_msg_{selected_vehicle}",
+                                                            placeholder="פרטים..."
+                                                        )
+                                                        quick_sev = st.selectbox(
+                                                            "חומרה",
+                                                            ["INFO", "WARNING", "URGENT"],
+                                                            key=f"quick_alert_sev_{selected_vehicle}"
+                                                        )
+
+                                                        if st.button("💾 שמור", key=f"quick_alert_save_{selected_vehicle}"):
+                                                            if quick_title and quick_message:
+                                                                try:
+                                                                    db.add_custom_alert({
+                                                                        'vehicle_id': selected_vehicle,
+                                                                        'alert_title': quick_title,
+                                                                        'alert_message': quick_message,
+                                                                        'severity': quick_sev,
+                                                                        'created_by': st.session_state.get('username', 'system')
+                                                                    })
+                                                                    st.success("✅ התראה נוספה!")
+                                                                    st.rerun()
+                                                                except Exception as e:
+                                                                    st.error(f"❌ שגיאה: {str(e)}")
+                                                            else:
+                                                                st.warning("⚠️ מלא כותרת ותוכן")
+
                                                 except Exception as rules_error:
                                                     st.warning(f"⚠️ לא ניתן לטעון Rules Engine: {str(rules_error)}")
 
@@ -866,163 +1016,6 @@ with tab3:
     except Exception as e:
         st.error(f"❌ שגיאה: {str(e)}")
 
-# === לשונית 4: ביצועי מודל (טאב חדש!) ===
-with tab4:
-    st.header("📈 ביצועי מודל ML - GradientBoosting")
-    st.caption("מדדים, גרפים ודוחות של המודל שאימן Agent E")
-    st.markdown("---")
-
-    try:
-        from src.ml_predictor import MLPredictor, load_crew_reports
-        import json
-
-        # טעינת מודל
-        predictor = MLPredictor()
-
-        if predictor.model:
-            # מידע בסיסי
-            model_info = predictor.get_model_info()
-
-            st.markdown("### 🤖 פרטי מודל")
-
-            col1, col2, col3 = st.columns(3)
-
-            with col1:
-                st.info(f"**שם מודל:** {model_info['model_name']}")
-                st.info(f"**תאריך אימון:** {model_info.get('train_date', 'N/A')}")
-
-            with col2:
-                st.success(f"**R² Score:** {model_info['test_r2']:.4f}")
-                st.caption("כמה % מהשונות המודל מסביר (גבוה=טוב)")
-
-            with col3:
-                st.success(f"**RMSE:** ₪{model_info['rmse']:.2f}")
-                st.success(f"**MAE:** ₪{model_info['mae']:.2f}")
-
-            st.markdown("---")
-
-            # טעינת דוחות
-            reports = load_crew_reports()
-
-            # דוח הערכה
-            if 'evaluation_metrics' in reports:
-                eval_metrics = reports['evaluation_metrics']
-
-                st.markdown("### 📊 מדדי ביצועים מפורטים")
-
-                metrics_col1, metrics_col2, metrics_col3, metrics_col4 = st.columns(4)
-
-                metrics_col1.metric("R² Score", f"{eval_metrics.get('r2', 0):.4f}",
-                                   help="Coefficient of determination")
-                metrics_col2.metric("RMSE", f"₪{eval_metrics.get('rmse', 0):.2f}",
-                                   help="Root Mean Squared Error")
-                metrics_col3.metric("MAE", f"₪{eval_metrics.get('mae', 0):.2f}",
-                                   help="Mean Absolute Error")
-                metrics_col4.metric("MAPE", f"{eval_metrics.get('mape', 0):.2f}%",
-                                   help="Mean Absolute Percentage Error")
-
-                st.markdown("---")
-
-            # Feature Importance
-            st.markdown("### 🔑 חשיבות פיצ'רים (Feature Importance)")
-            st.caption("אילו גורמים משפיעים הכי הרבה על עלות התחזוקה?")
-
-            importance_df = predictor.get_feature_importance()
-
-            if importance_df is not None:
-                col1, col2 = st.columns([2, 1])
-
-                with col1:
-                    import plotly.express as px
-
-                    fig = px.bar(
-                        importance_df.head(10),
-                        x='importance',
-                        y='feature',
-                        orientation='h',
-                        title="Top 10 Features",
-                        labels={'importance': 'Importance', 'feature': 'Feature'},
-                        color='importance',
-                        color_continuous_scale='viridis'
-                    )
-                    fig.update_layout(yaxis={'categoryorder':'total ascending'})
-                    st.plotly_chart(fig, use_container_width=True)
-
-                with col2:
-                    st.markdown("#### 🏆 Top 5 Features")
-                    for i, row in importance_df.head(5).iterrows():
-                        st.metric(
-                            row['feature'],
-                            f"{row['importance']:.4f}",
-                            help=f"מדד חשיבות: {row['importance']*100:.2f}%"
-                        )
-
-            st.markdown("---")
-
-            # גרפי הערכה
-            st.markdown("### 📊 גרפי הערכה")
-
-            graph_col1, graph_col2 = st.columns(2)
-
-            with graph_col1:
-                residual_plot_path = "reports/residual_plot.png"
-                if os.path.exists(residual_plot_path):
-                    st.image(residual_plot_path, caption="Residual Plot - פיזור שגיאות התחזית")
-                else:
-                    st.info("גרף Residual לא נמצא")
-
-            with graph_col2:
-                feature_plot_path = "reports/feature_importance.png"
-                if os.path.exists(feature_plot_path):
-                    st.image(feature_plot_path, caption="Feature Importance - חשיבות פיצ'רים")
-                else:
-                    st.info("גרף Feature Importance לא נמצא")
-
-            st.markdown("---")
-
-            # דוח Markdown
-            if 'evaluation_report' in reports:
-                with st.expander("📄 דוח הערכה מלא (Markdown)"):
-                    st.markdown(reports['evaluation_report'])
-
-            # כפתור אימון מחדש
-            st.markdown("### 🔄 אימון מחדש")
-            st.caption("הרץ את מערכת ה-AI מחדש כדי לאמן את המודל עם הנתונים האחרונים")
-
-            if st.button("🚀 הרץ מערכת AI (Crew 1 + Crew 2)", type="primary", use_container_width=True):
-                with st.spinner("מריץ מערכת AI... (עשוי לקחת 5-10 שניות)"):
-                    import subprocess
-
-                    try:
-                        result = subprocess.run(
-                            ["python", "src/crew_flow.py"],
-                            capture_output=True,
-                            text=True,
-                            timeout=60
-                        )
-
-                        if result.returncode == 0:
-                            st.success("✅ מערכת AI הושלמה בהצלחה!")
-                            st.info("רענן את הדף כדי לראות את המודל המעודכן")
-
-                            # הצגת פלט
-                            with st.expander("📋 לוג ריצה"):
-                                st.text(result.stdout)
-                        else:
-                            st.error("❌ שגיאה בהרצת המערכת")
-                            st.text(result.stderr)
-
-                    except subprocess.TimeoutExpired:
-                        st.warning("⏱️ הריצה ארכה יותר מדקה - המערכת עדיין רצה ברקע")
-                    except Exception as e:
-                        st.error(f"❌ שגיאה: {str(e)}")
-
-        else:
-            st.error("❌ המודל לא נטען")
-
-    except Exception as e:
-        st.error(f"❌ שגיאה: {str(e)}")
-
 # === לשונית 5: נתונים ===
 with tab5:
     from src.utils.enhanced_datatable import render_data_table_tabs
@@ -1085,6 +1078,22 @@ with tab6:
     with sub_tab2:
         st.subheader("📧 סנכרון חשבוניות מאימייל")
         st.caption("משיכה אוטומטית של חשבוניות (PDF/Excel/CSV) מתיקיית מייל ייעודית")
+
+        # הצג את התיקייה המוגדרת
+        configured_folder = os.getenv('EMAIL_FOLDER', 'INBOX')
+        if configured_folder == 'INBOX':
+            st.error(f"""
+            ⚠️ **שים לב!** התיקייה המוגדרת היא: **{configured_folder}**
+
+            המערכת תמשוך **את כל המיילים** מתיבת הדואר הנכנס!
+
+            **מומלץ מאוד:**
+            1. צור תווית (Label) ב-Gmail בשם "חשבוניות" או "Invoices"
+            2. עבור ל-**הגדרות אימייל** ובחר את התווית הספציפית
+            3. כך המערכת תמשוך רק מיילים מהתווית הזו
+            """)
+        else:
+            st.info(f"📂 התיקייה המוגדרת: **{configured_folder}**")
 
         # Check if email sync is enabled
         email_enabled = os.getenv('EMAIL_FETCH_ENABLED', 'false').lower() == 'true'
@@ -1201,6 +1210,26 @@ EMAIL_FOLDER=INBOX
                     except Exception as e:
                         st.error(f"❌ שגיאה: {str(e)}")
 
+            # Add button to list available folders
+            if st.button("📂 הצג תיקיות זמינות", use_container_width=False, type="secondary"):
+                try:
+                    from src.email_fetcher import EmailInvoiceProcessor
+
+                    with st.spinner("מחפש תיקיות..."):
+                        processor = EmailInvoiceProcessor()
+                        folders = processor.list_available_folders()
+
+                        if folders:
+                            st.success(f"נמצאו {len(folders)} תיקיות:")
+                            # Display folders in an expander
+                            with st.expander("רשימת תיקיות", expanded=True):
+                                for folder in folders:
+                                    st.code(folder, language=None)
+                        else:
+                            st.warning("לא נמצאו תיקיות או שגיאה בחיבור")
+                except Exception as e:
+                    st.error(f"❌ שגיאה בקבלת רשימת תיקיות: {str(e)}")
+
             st.markdown("---")
 
             # Sync history table
@@ -1224,14 +1253,75 @@ EMAIL_FOLDER=INBOX
                     'סטטוס'
                 ]
 
-                # Show only relevant columns
-                display_df = display_df[['תאריך עיבוד', 'נושא', 'שולח', 'חשבוניות', 'סטטוס']]
+                # Show only relevant columns for display (keep ID for deletion)
+                display_df_for_table = display_df[['ID', 'תאריך עיבוד', 'נושא', 'שולח', 'חשבוניות', 'סטטוס']]
 
                 st.dataframe(
-                    display_df,
+                    display_df_for_table,
                     use_container_width=True,
                     height=400
                 )
+
+                # Delete options
+                st.markdown("---")
+                st.markdown("### 🗑️ ניהול היסטוריה")
+
+                col_delete1, col_delete2, col_delete3 = st.columns(3)
+
+                with col_delete1:
+                    # Delete specific record by ID
+                    with st.form(key="delete_specific_form"):
+                        st.caption("מחיקת רשומה ספציפית")
+                        sync_id_to_delete = st.number_input(
+                            "הזן ID למחיקה",
+                            min_value=1,
+                            step=1,
+                            help="ניתן לראות את ה-ID בטבלה למעלה"
+                        )
+                        delete_specific_btn = st.form_submit_button("🗑️ מחק רשומה")
+
+                        if delete_specific_btn:
+                            if db.delete_email_sync_record(int(sync_id_to_delete)):
+                                st.success(f"✅ רשומה {sync_id_to_delete} נמחקה בהצלחה")
+                                st.rerun()
+                            else:
+                                st.error(f"❌ שגיאה במחיקת רשומה {sync_id_to_delete}")
+
+                with col_delete2:
+                    # Delete failed records only
+                    st.caption("מחיקת רשומות כושלות")
+                    failed_count = len(display_df[display_df['סטטוס'] == 'failed'])
+                    st.info(f"📊 {failed_count} רשומות כושלות")
+
+                    if st.button("🗑️ מחק רשומות כושלות", key="delete_failed"):
+                        if failed_count > 0:
+                            if db.delete_failed_email_sync_records():
+                                st.success(f"✅ {failed_count} רשומות כושלות נמחקו")
+                                st.rerun()
+                            else:
+                                st.error("❌ שגיאה במחיקת רשומות כושלות")
+                        else:
+                            st.warning("אין רשומות כושלות למחיקה")
+
+                with col_delete3:
+                    # Delete all records
+                    st.caption("מחיקת כל ההיסטוריה")
+                    total_count = len(display_df)
+                    st.info(f"📊 {total_count} רשומות סה\"כ")
+
+                    if st.button("🗑️ מחק הכל", key="delete_all"):
+                        # Add confirmation
+                        if 'confirm_delete_all' not in st.session_state:
+                            st.session_state.confirm_delete_all = True
+                            st.warning("⚠️ לחץ שוב לאישור מחיקת כל ההיסטוריה")
+                        else:
+                            if db.delete_all_email_sync_records():
+                                st.success(f"✅ כל {total_count} הרשומות נמחקו")
+                                del st.session_state.confirm_delete_all
+                                st.rerun()
+                            else:
+                                st.error("❌ שגיאה במחיקת כל הרשומות")
+                                del st.session_state.confirm_delete_all
             else:
                 st.info("ℹ️ עדיין לא בוצעו סנכרונים")
 
@@ -1380,12 +1470,21 @@ EMAIL_FOLDER=INBOX
                     st.caption(f"דוגמאות לתיקיות ב-{selected_provider}: {', '.join(provider_info.folder_examples)}")
 
                     selected_folder = st.text_input(
-                        "📂 שם תיקייה",
+                        "📂 שם תיקייה / תווית (Label)",
                         value=config_manager.current_config.get('EMAIL_FOLDER', 'INBOX'),
                         placeholder="INBOX",
-                        help="הזן את שם התיקייה ידנית",
+                        help="לדוגמה: חשבוניות, Invoices, או השאר INBOX לכל המיילים",
                         key="settings_folder_manual"
                     )
+
+                    st.warning("""
+                    ⚠️ **חשוב!** כדי למשוך מיילים מתווית ספציפית ב-Gmail:
+                    - בדוק שהתווית קיימת ב-Gmail שלך
+                    - הזן את שם התווית בדיוק כפי שהיא מופיעה (case-sensitive)
+                    - לדוגמה: אם יצרת תווית "חשבוניות" ב-Gmail, הזן: **חשבוניות**
+                    - אם השארת INBOX, המערכת תמשוך **את כל המיילים** מתיבת הדואר הנכנס!
+                    """)
+
                     st.session_state['selected_folder'] = selected_folder
 
                 # כפתור שמירה

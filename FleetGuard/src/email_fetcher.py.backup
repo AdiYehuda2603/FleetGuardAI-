@@ -121,41 +121,6 @@ class EmailFetcher:
             except Exception as e:
                 logger.error(f"Error disconnecting: {str(e)}")
 
-    def list_folders(self) -> List[str]:
-        """
-        List all available folders/labels in the mailbox.
-
-        Returns:
-            List of folder names (decoded from IMAP UTF-7)
-        """
-        if not self.connected:
-            logger.error("Cannot list folders: not connected")
-            return []
-
-        try:
-            status, folder_list = self.imap.list()
-            if status != 'OK':
-                logger.error(f"Failed to list folders: {status}")
-                return []
-
-            folders = []
-            for folder_bytes in folder_list:
-                # Parse IMAP LIST response: (flags) "delimiter" "folder_name"
-                folder_str = folder_bytes.decode('utf-8') if isinstance(folder_bytes, bytes) else folder_bytes
-                # Extract folder name (last quoted string)
-                import re
-                match = re.search(r'"([^"]+)"$', folder_str)
-                if match:
-                    folder_name = match.group(1)
-                    folders.append(folder_name)
-                    logger.info(f"Found folder: {folder_name}")
-
-            return folders
-
-        except Exception as e:
-            logger.error(f"Error listing folders: {str(e)}")
-            return []
-
     def select_folder(self, folder: str = None) -> Tuple[bool, str]:
         """
         Select email folder/mailbox.
@@ -211,10 +176,12 @@ class EmailFetcher:
         except (UnicodeDecodeError, UnicodeEncodeError):
             pass
 
-        # Encode to IMAP modified UTF-7 (RFC 3501)
-        # This is specifically tested with Hebrew characters
+        # Encode to IMAP modified UTF-7 using a proven algorithm
         try:
             import base64
+
+            # Modified UTF-7 encoding for IMAP (RFC 3501)
+            # & is shift character, - ends shift, use base64 with comma instead of slash
 
             out = []
             in_shift = False
@@ -226,20 +193,18 @@ class EmailFetcher:
                     if c == '&':
                         # End any shift sequence first
                         if in_shift:
+                            # Encode buffered characters
                             if shift_buffer:
-                                # Encode buffered Unicode characters to UTF-16BE
                                 utf16_bytes = ''.join(shift_buffer).encode('utf-16-be')
-                                # Base64 encode
                                 b64 = base64.b64encode(utf16_bytes).decode('ascii')
-                                # Remove padding and replace / with ,
+                                # IMAP uses comma instead of slash, no padding
                                 b64 = b64.rstrip('=').replace('/', ',')
                                 out.append(f'&{b64}-')
                                 shift_buffer = []
                             in_shift = False
-                        # Literal & is encoded as &-
+                        # Literal & encoded as &-
                         out.append('&-')
                     else:
-                        # Regular ASCII character
                         # End shift if active
                         if in_shift:
                             if shift_buffer:
@@ -251,7 +216,7 @@ class EmailFetcher:
                             in_shift = False
                         out.append(c)
                 else:
-                    # Non-ASCII character (Hebrew, etc.) - needs encoding
+                    # Non-ASCII - needs encoding
                     if not in_shift:
                         in_shift = True
                     shift_buffer.append(c)
@@ -265,51 +230,10 @@ class EmailFetcher:
 
             encoded = ''.join(out)
             logger.info(f"IMAP UTF-7 encoding: '{folder_name}' -> '{encoded}'")
-
-            # IMPORTANT FIX: Gmail/IMAP doesn't actually use comma replacement
-            # The standard modified UTF-7 for IMAP uses '+' and '/' from base64 as-is
-            # Only the shift character '&' and terminator '-' are special
-            # Let's try the correct encoding:
-
-            # Re-encode properly without comma replacement
-            out2 = []
-            in_shift2 = False
-            shift_buffer2 = []
-
-            for c in folder_name:
-                if 0x20 <= ord(c) <= 0x7E:
-                    if c == '&':
-                        if in_shift2 and shift_buffer2:
-                            utf16_bytes = ''.join(shift_buffer2).encode('utf-16-be')
-                            b64 = base64.b64encode(utf16_bytes).decode('ascii').rstrip('=')
-                            out2.append(f'&{b64}-')
-                            shift_buffer2 = []
-                        in_shift2 = False
-                        out2.append('&-')
-                    else:
-                        if in_shift2 and shift_buffer2:
-                            utf16_bytes = ''.join(shift_buffer2).encode('utf-16-be')
-                            b64 = base64.b64encode(utf16_bytes).decode('ascii').rstrip('=')
-                            out2.append(f'&{b64}-')
-                            shift_buffer2 = []
-                        in_shift2 = False
-                        out2.append(c)
-                else:
-                    in_shift2 = True
-                    shift_buffer2.append(c)
-
-            if in_shift2 and shift_buffer2:
-                utf16_bytes = ''.join(shift_buffer2).encode('utf-16-be')
-                b64 = base64.b64encode(utf16_bytes).decode('ascii').rstrip('=')
-                out2.append(f'&{b64}-')
-
-            encoded_correct = ''.join(out2)
-            logger.info(f"IMAP UTF-7 encoding (corrected): '{folder_name}' -> '{encoded_correct}'")
-            return encoded_correct
+            return encoded
 
         except Exception as e:
             logger.error(f"Failed to encode folder name '{folder_name}': {e}")
-            logger.exception(e)
             # Return original and let IMAP server handle it
             return folder_name
 
@@ -727,18 +651,3 @@ class EmailInvoiceProcessor:
         if success:
             self.fetcher.disconnect()
         return success, message
-
-    def list_available_folders(self) -> List[str]:
-        """
-        Get list of all available folders/labels in mailbox.
-
-        Returns:
-            List of folder names
-        """
-        success, _ = self.fetcher.connect()
-        if not success:
-            return []
-
-        folders = self.fetcher.list_folders()
-        self.fetcher.disconnect()
-        return folders

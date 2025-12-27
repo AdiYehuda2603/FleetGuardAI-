@@ -105,6 +105,9 @@ class FleetRulesEngine:
             all_alerts.extend(self.check_high_utilization(vehicle))
             all_alerts.extend(self.check_workshop_quality(vehicle, vehicle_invoices, vehicles_df))
 
+        # Add custom alerts
+        all_alerts.extend(self.get_custom_alerts(vehicle_id))
+
         # Determine overall alert level
         severity_counts = {
             'URGENT': sum(1 for a in all_alerts if a['severity'] == 'URGENT'),
@@ -462,3 +465,54 @@ class FleetRulesEngine:
             self.rules[rule_name][param_name] = new_value
             return True
         return False
+
+    def get_custom_alerts(self, vehicle_id: Optional[str] = None) -> List[Dict]:
+        """
+        Get custom user-defined alerts from database.
+
+        Args:
+            vehicle_id: Specific vehicle to filter (None = all vehicles)
+
+        Returns:
+            List of custom alert dicts
+        """
+        try:
+            # Get custom alerts from database
+            custom_alerts_df = self.db.get_custom_alerts(vehicle_id=vehicle_id, active_only=True)
+
+            if custom_alerts_df.empty:
+                return []
+
+            # Get vehicle data to enrich with plate numbers
+            vehicles_df = self.db.get_vehicle_with_stats()
+
+            # Convert to standard alert format
+            alerts = []
+            for _, alert in custom_alerts_df.iterrows():
+                # Get plate number for this vehicle
+                vehicle_info = vehicles_df[vehicles_df['vehicle_id'] == alert['vehicle_id']]
+                plate = vehicle_info.iloc[0]['plate'] if not vehicle_info.empty else alert['vehicle_id']
+
+                alert_dict = {
+                    'rule_name': 'custom_alert',
+                    'severity': alert['severity'],
+                    'vehicle_id': alert['vehicle_id'],
+                    'plate': plate,
+                    'message': f"📌 {alert['alert_title']}: {alert['alert_message']}",
+                    'details': {
+                        'alert_id': int(alert['alert_id']),
+                        'alert_title': alert['alert_title'],
+                        'created_at': alert['created_at'],
+                        'created_by': alert.get('created_by', 'system'),
+                        'due_date': alert.get('due_date'),
+                        'notes': alert.get('notes')
+                    },
+                    'recommendation': alert.get('notes', 'התראה מותאמת אישית')
+                }
+                alerts.append(alert_dict)
+
+            return alerts
+
+        except Exception as e:
+            # If table doesn't exist or other error, return empty list
+            return []

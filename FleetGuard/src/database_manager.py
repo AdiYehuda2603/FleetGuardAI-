@@ -753,3 +753,257 @@ class DatabaseManager:
             'invoice_count': len(last_sync['invoice_numbers'].split(',')) if last_sync['invoice_numbers'] else 0,
             'subject': last_sync['subject']
         }
+
+    def delete_email_sync_record(self, sync_id: int) -> bool:
+        """
+        Delete a specific email sync record from history.
+
+        Args:
+            sync_id: The sync_id to delete
+
+        Returns:
+            bool: True if deleted successfully, False otherwise
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("DELETE FROM email_sync_log WHERE sync_id = ?", (sync_id,))
+            conn.commit()
+            deleted_count = cursor.rowcount
+            return deleted_count > 0
+        except Exception as e:
+            conn.rollback()
+            print(f"שגיאה במחיקת רשומת סנכרון: {str(e)}")
+            return False
+        finally:
+            conn.close()
+
+    def delete_all_email_sync_records(self) -> bool:
+        """
+        Delete all email sync records from history.
+
+        Returns:
+            bool: True if deleted successfully, False otherwise
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("DELETE FROM email_sync_log")
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"שגיאה במחיקת כל רשומות הסנכרון: {str(e)}")
+            return False
+        finally:
+            conn.close()
+
+    def delete_failed_email_sync_records(self) -> bool:
+        """
+        Delete only failed email sync records from history.
+
+        Returns:
+            bool: True if deleted successfully, False otherwise
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("DELETE FROM email_sync_log WHERE status = 'failed'")
+            conn.commit()
+            deleted_count = cursor.rowcount
+            return deleted_count >= 0
+        except Exception as e:
+            conn.rollback()
+            print(f"שגיאה במחיקת רשומות סנכרון כושלות: {str(e)}")
+            return False
+        finally:
+            conn.close()
+
+    # ===== התראות מותאמות אישית (Custom Alerts) =====
+
+    def create_custom_alerts_table(self):
+        """
+        Create custom_alerts table if it doesn't exist.
+
+        This table stores user-defined custom alerts per vehicle.
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS custom_alerts (
+                    alert_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    vehicle_id TEXT NOT NULL,
+                    alert_title TEXT NOT NULL,
+                    alert_message TEXT NOT NULL,
+                    severity TEXT CHECK(severity IN ('URGENT', 'WARNING', 'INFO')) DEFAULT 'INFO',
+                    created_at TEXT NOT NULL,
+                    created_by TEXT,
+                    is_active INTEGER DEFAULT 1,
+                    due_date TEXT,
+                    notes TEXT,
+                    FOREIGN KEY (vehicle_id) REFERENCES vehicles(vehicle_id)
+                )
+            """)
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            raise Exception(f"שגיאה ביצירת טבלת התראות מותאמות אישית: {str(e)}")
+        finally:
+            conn.close()
+
+    def add_custom_alert(self, alert_data):
+        """
+        Add a new custom alert for a vehicle.
+
+        Args:
+            alert_data: Dict with keys:
+                - vehicle_id: Vehicle identifier
+                - alert_title: Short title for the alert
+                - alert_message: Detailed alert message
+                - severity: 'URGENT', 'WARNING', or 'INFO'
+                - created_by: Username who created the alert
+                - due_date: Optional due date for the alert
+                - notes: Optional additional notes
+
+        Returns:
+            int: alert_id of created alert
+        """
+        from datetime import datetime
+
+        # Ensure table exists
+        self.create_custom_alerts_table()
+
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("""
+                INSERT INTO custom_alerts
+                (vehicle_id, alert_title, alert_message, severity, created_at, created_by, due_date, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                alert_data['vehicle_id'],
+                alert_data['alert_title'],
+                alert_data['alert_message'],
+                alert_data.get('severity', 'INFO'),
+                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                alert_data.get('created_by', 'system'),
+                alert_data.get('due_date'),
+                alert_data.get('notes')
+            ))
+
+            conn.commit()
+            alert_id = cursor.lastrowid
+            return alert_id
+        except Exception as e:
+            conn.rollback()
+            raise Exception(f"שגיאה בהוספת התראה מותאמת אישית: {str(e)}")
+        finally:
+            conn.close()
+
+    def get_custom_alerts(self, vehicle_id=None, active_only=True):
+        """
+        Get custom alerts, optionally filtered by vehicle.
+
+        Args:
+            vehicle_id: Specific vehicle to filter (None = all vehicles)
+            active_only: If True, only return active alerts
+
+        Returns:
+            DataFrame with custom alerts
+        """
+        # Ensure table exists
+        self.create_custom_alerts_table()
+
+        conn = self.get_connection()
+
+        query = "SELECT * FROM custom_alerts"
+        conditions = []
+
+        if vehicle_id:
+            conditions.append(f"vehicle_id = '{vehicle_id}'")
+        if active_only:
+            conditions.append("is_active = 1")
+
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+
+        query += " ORDER BY created_at DESC"
+
+        df = pd.read_sql_query(query, conn)
+        conn.close()
+
+        return df
+
+    def update_custom_alert(self, alert_id, updates):
+        """
+        Update a custom alert.
+
+        Args:
+            alert_id: ID of the alert to update
+            updates: Dict with fields to update
+
+        Returns:
+            bool: True if updated successfully
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        try:
+            # Build UPDATE query dynamically
+            set_clauses = []
+            values = []
+
+            allowed_fields = ['alert_title', 'alert_message', 'severity', 'is_active', 'due_date', 'notes']
+
+            for field in allowed_fields:
+                if field in updates:
+                    set_clauses.append(f"{field} = ?")
+                    values.append(updates[field])
+
+            if not set_clauses:
+                return False
+
+            values.append(alert_id)
+
+            query = f"UPDATE custom_alerts SET {', '.join(set_clauses)} WHERE alert_id = ?"
+            cursor.execute(query, values)
+
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            raise Exception(f"שגיאה בעדכון התראה מותאמת אישית: {str(e)}")
+        finally:
+            conn.close()
+
+    def delete_custom_alert(self, alert_id):
+        """
+        Delete a custom alert (soft delete - marks as inactive).
+
+        Args:
+            alert_id: ID of the alert to delete
+
+        Returns:
+            bool: True if deleted successfully
+        """
+        return self.update_custom_alert(alert_id, {'is_active': 0})
+
+    def get_vehicle_custom_alerts_count(self, vehicle_id):
+        """
+        Get count of active custom alerts for a vehicle.
+
+        Args:
+            vehicle_id: Vehicle identifier
+
+        Returns:
+            int: Count of active alerts
+        """
+        df = self.get_custom_alerts(vehicle_id=vehicle_id, active_only=True)
+        return len(df)
