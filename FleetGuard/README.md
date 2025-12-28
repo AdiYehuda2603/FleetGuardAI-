@@ -93,11 +93,11 @@ FleetGuardAI provides:
 
 **Note:** The following estimates are based on academic literature and industry reports on predictive maintenance systems, not validated on this specific dataset.
 
-| Source | Finding |
-|--------|---------|
-| McKinsey & Company (2021) | Predictive maintenance can reduce costs by 10-40% |
-| Deloitte (2020) | Fleet optimization systems show 15-30% reduction in unplanned maintenance |
-| Aberdeen Group (2019) | Data-driven fleet management reduces total cost of ownership by 12-20% |
+| Source | Finding | Reference |
+|--------|---------|-----------|
+| **McKinsey & Company** | Predictive maintenance can reduce maintenance costs by 10-40% and downtime by 50% | [Prediction at Scale (McKinsey)](https://www.mckinsey.com/capabilities/operations/our-insights/prediction-at-scale-how-industry-can-get-more-value-out-of-maintenance) |
+| **Deloitte** | Predictive maintenance reduces breakdowns by 70% and maintenance costs by 25% | [Predictive Maintenance Approach (Deloitte PDF)](https://www2.deloitte.com/content/dam/Deloitte/us/Documents/process-and-operations/us-predictive-maintenance.pdf) |
+| **Deloitte** | PdM increases equipment uptime by 10-20% and reduces overall maintenance costs by 5-10% | [Industry 4.0 and Predictive Technologies (Deloitte Insights)](https://www2.deloitte.com/us/en/insights/focus/industry-4-0/using-predictive-technologies-for-asset-maintenance.html) |
 
 **Our System Contribution:**
 - **Accurate predictions** enable better budget planning (validated: ±₪13.88 error)
