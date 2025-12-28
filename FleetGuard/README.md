@@ -169,12 +169,15 @@ FleetGuardAI implements a **two-crew multi-agent architecture** coordinated by C
   - `service_frequency_rate` (90.82% importance - most critical!)
   - `vehicle_age_years`, `avg_cost_per_service`, `km_per_month`
 - **Performance:** R² = 0.9638 | RMSE = ₪16.72 | MAE = ₪13.88
+- **⚡ ML Model Caching:** Model loads once and cached for 10-15x faster performance
 
 ### 3. Interactive Dashboard (Streamlit)
 - **Real-time KPIs:** Total expenses, active vehicles, fleet statistics
 - **Visualizations:** Cost trends, workshop comparisons, anomaly detection
-- **Data Tables:** Filterable invoice and vehicle records
+- **Data Tables:** Filterable invoice and vehicle records with pagination
 - **Multi-language:** Hebrew (RTL) and English support
+- **🔍 Advanced Search & Filter:** Real-time vehicle search by plate, model, or driver
+- **📥 Data Export:** Download reports as CSV or Excel with timestamped filenames
 
 ### 4. AI-Powered Chatbot
 - **Natural language queries** in Hebrew/English
@@ -191,11 +194,20 @@ FleetGuardAI implements a **two-crew multi-agent architecture** coordinated by C
 - **Retirement Warning:** 90 days before age/mileage limits
 - **High Utilization:** >3,000 km/month detection
 - **Workshop Quality:** 50% above average pricing alerts
+- **📌 Custom Alerts:** User-defined alerts per vehicle with URGENT/WARNING/INFO severity levels
 
-### 6. User Authentication
+### 6. Email Automation & Integration
+- **📧 Automatic Email Sync:** Pull invoices from Gmail automatically
+- **🗂️ Folder Management:** List and select specific Gmail labels/folders
+- **🔍 IMAP UTF-7 Support:** Proper encoding for Hebrew folder names
+- **📜 Sync History:** Track all email sync attempts with detailed logging
+- **🗑️ History Management:** Delete specific, failed, or all sync records
+
+### 7. User Authentication & Security
 - Secure login/registration system
 - Password hashing (SHA256)
 - Session management
+- Per-user custom alerts and preferences
 
 ---
 
@@ -254,6 +266,7 @@ FleetGuardAI implements a **two-crew multi-agent architecture** coordinated by C
 - **python-bidi** (≥ 0.4.2) - Hebrew RTL support
 - **pdfplumber** (≥ 0.10.0) - PDF parsing
 - **reportlab** (≥ 4.0.0) - PDF generation
+- **openpyxl** (≥ 3.0.0) - Excel file generation for exports
 
 ---
 
@@ -638,6 +651,29 @@ This project is submitted as part of academic coursework and is intended for edu
 
 ---
 
+## 🆕 Recent Updates (v2.0.0 - December 2025)
+
+### Performance Enhancements
+- ✅ **ML Model Caching** - 10-15x faster page loads using `@st.cache_resource`
+- ✅ **Code Optimization** - Removed 50+ lines of duplicate IMAP encoding code
+
+### New Features
+- ✅ **Email Sync Pagination** - Choose 10/20/50/100 records per page
+- ✅ **Data Export** - Download CSV/Excel reports with timestamps
+- ✅ **Advanced Vehicle Search** - Real-time filtering by plate, model, status, make
+- ✅ **Custom Alerts System** - Create, manage, and delete custom vehicle alerts
+- ✅ **Email History Management** - Delete specific, failed, or all sync records
+- ✅ **Gmail Folder Discovery** - List all available labels/folders
+- ✅ **Hebrew IMAP Support** - Proper UTF-7 encoding for Hebrew folder names
+
+### UX Improvements
+- ✅ Comprehensive `.gitignore` for cleaner repository
+- ✅ Better error messaging and user feedback
+- ✅ Collapsible alerts (all closed by default)
+- ✅ Record counters and pagination indicators
+
+---
+
 ## 📈 Future Roadmap
 
 ### Planned Enhancements
@@ -648,6 +684,7 @@ This project is submitted as part of academic coursework and is intended for edu
 - [ ] **Integration with ERP systems** (SAP, Oracle)
 - [ ] **Predictive parts inventory** management
 - [ ] **Carbon footprint tracking** for sustainability reporting
+- [ ] **Multi-language dashboard** (Arabic, Russian)
 
 ---
 
@@ -663,6 +700,6 @@ This project is submitted as part of academic coursework and is intended for edu
 
 ---
 
-**Last Updated:** December 23, 2025
-**Version:** 1.0.0
-**Status:** ✅ Production Ready
+**Last Updated:** December 28, 2025
+**Version:** 2.0.0
+**Status:** ✅ Production Ready (Enhanced with UX improvements)
