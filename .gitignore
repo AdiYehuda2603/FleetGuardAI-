@@ -1,1 +1,48 @@
-nul
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+FleetGuard/data/*.db
+FleetGuard/models/*.png
+FleetGuard/reports/*.png
+FleetGuard/reports/*.json
+FleetGuard/reports/*.md
+
+# Temporary files
+*.tmp
+*.log
+*.zip
+
+# Documentation drafts
+*_PROPOSAL_*.md
+project_*.json
+generate_*.py
+setup_project.py
+implementation_plan.md
+UI_IMPROVEMENTS_SUMMARY.md
+fleetguard_price_bias_he/
