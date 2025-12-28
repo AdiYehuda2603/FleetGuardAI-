@@ -51,10 +51,11 @@ FleetGuardAI addresses real-world challenges faced by organizations managing veh
 ### Project Mission
 
 Transform historical fleet data into actionable insights and accurate cost predictions, enabling:
-- **15-25% reduction** in maintenance costs
-- **Proactive budgeting** with monthly cost forecasts
-- **Data-driven vehicle replacement** decisions
+- **Predictive cost forecasting** with 96.4% accuracy (R² = 0.9638)
+- **Proactive budgeting** with monthly cost forecasts (±₪13.88 error)
+- **Data-driven vehicle replacement** decisions based on ML predictions
 - **Real-time alerting** for maintenance overdue and anomalies
+- **Potential cost reduction** through early problem detection and optimized scheduling
 
 ---
 
@@ -80,12 +81,29 @@ FleetGuardAI provides:
 
 ### Business Value
 
-| Metric | Impact |
-|--------|--------|
-| **Cost Savings** | 15-25% reduction in maintenance expenses |
-| **Prediction Accuracy** | ±₪13.88 average error (MAPE: 5.54%) |
-| **Downtime Prevention** | Early failure detection through alerts |
-| **Decision Speed** | Instant insights via AI chatbot |
+| Metric | Measured Impact |
+|--------|-----------------|
+| **Prediction Accuracy** | R² = 0.9638 (96.38% variance explained) |
+| **Forecast Error** | ±₪13.88 average error (MAPE: 5.54%) |
+| **Model Performance** | RMSE = ₪16.72 per month |
+| **Alert Detection** | Real-time identification of 5 risk categories |
+| **Decision Speed** | Instant AI-powered insights via chatbot |
+
+### Expected ROI (Based on Industry Research)
+
+**Note:** The following estimates are based on academic literature and industry reports on predictive maintenance systems, not validated on this specific dataset.
+
+| Source | Finding |
+|--------|---------|
+| McKinsey & Company (2021) | Predictive maintenance can reduce costs by 10-40% |
+| Deloitte (2020) | Fleet optimization systems show 15-30% reduction in unplanned maintenance |
+| Aberdeen Group (2019) | Data-driven fleet management reduces total cost of ownership by 12-20% |
+
+**Our System Contribution:**
+- **Accurate predictions** enable better budget planning (validated: ±₪13.88 error)
+- **Early warnings** reduce emergency repairs (5 alert categories implemented)
+- **Workshop optimization** helps select cost-effective providers (cost anomaly detection)
+- **Actual cost reduction** depends on organizational implementation and adoption
 
 ---
 
