@@ -59,6 +59,39 @@ def load_ml_predictor():
         return None
 
 
+# ===== Export Utilities =====
+def export_dataframe_to_csv(df, filename="export.csv"):
+    """
+    Convert DataFrame to CSV for download.
+
+    Args:
+        df: pandas DataFrame
+        filename: suggested filename
+
+    Returns:
+        CSV data as bytes
+    """
+    return df.to_csv(index=False).encode('utf-8-sig')  # utf-8-sig for Excel compatibility
+
+
+def export_dataframe_to_excel(df, filename="export.xlsx"):
+    """
+    Convert DataFrame to Excel for download.
+
+    Args:
+        df: pandas DataFrame
+        filename: suggested filename
+
+    Returns:
+        Excel data as bytes
+    """
+    from io import BytesIO
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Data')
+    return output.getvalue()
+
+
 # אתחול מנהל Authentication
 auth = AuthManager()
 
@@ -1258,11 +1291,41 @@ EMAIL_FOLDER=INBOX
             # Sync history table
             st.markdown("### 📜 היסטוריית סנכרונים")
 
-            all_history = db.get_email_sync_history(limit=20)
+            # Pagination controls
+            col_page1, col_page2, col_page3 = st.columns([2, 1, 1])
+            with col_page1:
+                records_per_page = st.selectbox(
+                    "📊 רשומות לעמוד",
+                    options=[10, 20, 50, 100],
+                    index=1,
+                    key="email_history_page_size"
+                )
+
+            # Get total count first (we'll need to modify database_manager for this)
+            all_history = db.get_email_sync_history(limit=1000)  # Get more for pagination
 
             if not all_history.empty:
+                total_records = len(all_history)
+                total_pages = (total_records + records_per_page - 1) // records_per_page
+
+                with col_page2:
+                    st.metric("סה\"כ רשומות", total_records)
+                with col_page3:
+                    current_page = st.number_input(
+                        "עמוד",
+                        min_value=1,
+                        max_value=max(1, total_pages),
+                        value=1,
+                        key="email_history_page"
+                    )
+
+                # Calculate pagination
+                start_idx = (current_page - 1) * records_per_page
+                end_idx = start_idx + records_per_page
+                paginated_history = all_history.iloc[start_idx:end_idx]
+
                 # Format the dataframe for display
-                display_df = all_history.copy()
+                display_df = paginated_history.copy()
 
                 # Rename columns to Hebrew
                 display_df.columns = [
@@ -1278,6 +1341,30 @@ EMAIL_FOLDER=INBOX
 
                 # Show only relevant columns for display (keep ID for deletion)
                 display_df_for_table = display_df[['ID', 'תאריך עיבוד', 'נושא', 'שולח', 'חשבוניות', 'סטטוס']]
+
+                # Show current page info and export buttons
+                col_info, col_export1, col_export2 = st.columns([2, 1, 1])
+                with col_info:
+                    st.caption(f"מציג רשומות {start_idx + 1}-{min(end_idx, total_records)} מתוך {total_records}")
+                with col_export1:
+                    # Prepare full history for export (not just current page)
+                    export_df = all_history.copy()
+                    export_df.columns = ['ID', 'מזהה מייל', 'נושא', 'שולח', 'תאריך קבלה', 'תאריך עיבוד', 'חשבוניות', 'סטטוס']
+                    st.download_button(
+                        label="📥 CSV",
+                        data=export_dataframe_to_csv(export_df),
+                        file_name=f"email_sync_history_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+                with col_export2:
+                    st.download_button(
+                        label="📥 Excel",
+                        data=export_dataframe_to_excel(export_df),
+                        file_name=f"email_sync_history_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True
+                    )
 
                 st.dataframe(
                     display_df_for_table,
@@ -1777,8 +1864,75 @@ with tab8:
 
                 st.markdown("---")
 
+                # Search and filter
+                st.markdown("---")
+                st.subheader("🔍 חיפוס וסינון")
+
+                col_search, col_filter1, col_filter2 = st.columns(3)
+                with col_search:
+                    search_term = st.text_input(
+                        "🔎 חיפוש",
+                        placeholder="מספר רכב, מספר רישוי, דגם...",
+                        key="fleet_search"
+                    )
+                with col_filter1:
+                    status_filter = st.multiselect(
+                        "סטטוס",
+                        options=fleet_df['status'].unique().tolist() if 'status' in fleet_df.columns else [],
+                        default=None,
+                        key="fleet_status_filter"
+                    )
+                with col_filter2:
+                    if 'make_model' in fleet_df.columns:
+                        make_filter = st.multiselect(
+                            "יצרן/דגם",
+                            options=sorted(fleet_df['make_model'].unique().tolist()),
+                            default=None,
+                            key="fleet_make_filter"
+                        )
+                    else:
+                        make_filter = []
+
+                # Apply filters
+                filtered_fleet = fleet_df.copy()
+
+                if search_term:
+                    search_mask = False
+                    for col in ['vehicle_id', 'plate', 'make_model', 'assigned_to']:
+                        if col in filtered_fleet.columns:
+                            search_mask |= filtered_fleet[col].astype(str).str.contains(search_term, case=False, na=False)
+                    filtered_fleet = filtered_fleet[search_mask]
+
+                if status_filter:
+                    filtered_fleet = filtered_fleet[filtered_fleet['status'].isin(status_filter)]
+
+                if make_filter:
+                    filtered_fleet = filtered_fleet[filtered_fleet['make_model'].isin(make_filter)]
+
+                st.caption(f"מציג {len(filtered_fleet)} רכבים מתוך {total_vehicles}")
+
                 # טבלה מפורטת
-                st.subheader("פירוט מלא לכל רכב")
+                col_title, col_export1, col_export2 = st.columns([3, 1, 1])
+                with col_title:
+                    st.subheader("פירוט מלא לכל רכב")
+                with col_export1:
+                    st.download_button(
+                        label="📥 CSV",
+                        data=export_dataframe_to_csv(fleet_df),
+                        file_name=f"fleet_status_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv",
+                        use_container_width=True,
+                        key="export_fleet_csv"
+                    )
+                with col_export2:
+                    st.download_button(
+                        label="📥 Excel",
+                        data=export_dataframe_to_excel(fleet_df),
+                        file_name=f"fleet_status_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True,
+                        key="export_fleet_excel"
+                    )
 
                 # בחירת עמודות להצגה
                 display_cols = [
@@ -1790,23 +1944,26 @@ with tab8:
 
                 available_cols = [col for col in display_cols if col in fleet_df.columns]
 
-                # עיצוב הטבלה
-                styled_df = fleet_df[available_cols].copy()
+                # עיצוב הטבלה - use filtered_fleet instead of fleet_df
+                styled_df = filtered_fleet[available_cols].copy() if not filtered_fleet.empty else pd.DataFrame()
 
-                # צביעת שורות לפי סטטוס
-                def highlight_status(row):
-                    if row.get('status') == 'retired':
-                        return ['background-color: #ffcccc'] * len(row)
-                    elif row.get('days_until_retirement', 999) < 180:
-                        return ['background-color: #fff3cd'] * len(row)
-                    else:
-                        return [''] * len(row)
+                if not styled_df.empty:
+                    # צביעת שורות לפי סטטוס
+                    def highlight_status(row):
+                        if row.get('status') == 'retired':
+                            return ['background-color: #ffcccc'] * len(row)
+                        elif row.get('days_until_retirement', 999) < 180:
+                            return ['background-color: #fff3cd'] * len(row)
+                        else:
+                            return [''] * len(row)
 
-                st.dataframe(
-                    styled_df.style.apply(highlight_status, axis=1),
-                    use_container_width=True,
-                    height=600
-                )
+                    st.dataframe(
+                        styled_df.style.apply(highlight_status, axis=1),
+                        use_container_width=True,
+                        height=600
+                    )
+                else:
+                    st.info("לא נמצאו רכבים התואמים לקריטריונים")
 
                 # הורדת דוח Excel
                 import io
