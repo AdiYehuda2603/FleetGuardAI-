@@ -16,6 +16,10 @@ venv/
 env/
 ENV/
 
+# Environment variables (contains secrets)
+.env
+FleetGuard/.env
+
 # IDE
 .vscode/
 .idea/
