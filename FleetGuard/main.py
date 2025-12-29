@@ -20,18 +20,19 @@ logging.getLogger('streamlit.runtime.state').setLevel(logging.ERROR    )
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from dotenv import load_dotenv
 
-# טעינת משתני סביבה מקובץ .env
-load_dotenv()
+# ייבוא ConfigLoader - תומך ב-Streamlit Secrets וגם ב-.env
+from src.utils.config_loader import config
 
 # ייבוא המודולים שבנינו בתיקיית src
 try:
     from src.database_manager import DatabaseManager
     from src.ai_engine import FleetAIEngine
     from src.auth_manager import AuthManager
-except ImportError:
-    st.error("❌ לא מצליח למצוא את תיקיית src. וודא שאתה מריץ את הפקודה מתיקיית FleetGuard.")
+except ImportError as e:
+    st.error(f"❌ Import Error: {e}")
+    st.error(f"📂 Current working directory: {os.getcwd()}")
+    st.error(f"🐍 Python path: {sys.path[:3]}")
     st.stop()
 
 

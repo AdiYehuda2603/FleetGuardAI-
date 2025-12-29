@@ -490,19 +490,18 @@ class EmailInvoiceProcessor:
         self.temp_dir.mkdir(parents=True, exist_ok=True)
 
     def _load_config(self) -> EmailConfig:
-        """Load email configuration from environment variables."""
-        from dotenv import load_dotenv
-        load_dotenv()
+        """Load email configuration from environment variables or Streamlit secrets."""
+        from src.utils.config_loader import config
 
         return EmailConfig(
-            imap_server=os.getenv('EMAIL_IMAP_SERVER', 'imap.gmail.com'),
-            imap_port=int(os.getenv('EMAIL_IMAP_PORT', '993')),
-            email_address=os.getenv('EMAIL_ADDRESS', ''),
-            email_password=os.getenv('EMAIL_PASSWORD', ''),
-            folder=os.getenv('EMAIL_FOLDER', 'INBOX'),
-            mark_as_read=os.getenv('EMAIL_MARK_AS_READ', 'true').lower() == 'true',
-            max_fetch=int(os.getenv('EMAIL_MAX_FETCH', '50')),
-            date_filter_days=int(os.getenv('EMAIL_DATE_FILTER_DAYS', '30'))
+            imap_server=config.get('EMAIL_IMAP_SERVER', 'imap.gmail.com'),
+            imap_port=config.get_int('EMAIL_IMAP_PORT', 993),
+            email_address=config.get('EMAIL_ADDRESS', ''),
+            email_password=config.get('EMAIL_PASSWORD', ''),
+            folder=config.get('EMAIL_FOLDER', 'INBOX'),
+            mark_as_read=config.get_bool('EMAIL_MARK_AS_READ', True),
+            max_fetch=config.get_int('EMAIL_MAX_FETCH', 50),
+            date_filter_days=config.get_int('EMAIL_DATE_FILTER_DAYS', 30)
         )
 
     def sync_emails(self, silent: bool = False) -> Dict:

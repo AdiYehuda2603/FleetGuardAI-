@@ -28,6 +28,7 @@ from src.utils.data_validator import DataValidator
 from src.utils.eda_generator import EDAGenerator
 from src.utils.ml_trainer import FleetMLTrainer
 from src.database_manager import DatabaseManager
+from src.utils.path_resolver import path_resolver
 
 
 class CrewOrchestrator:
@@ -350,35 +351,31 @@ class CrewOrchestrator:
 
     def _save_temp_data(self, df, filename):
         """Save DataFrame to temp file for agents to access"""
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        processed_dir = os.path.join(base_dir, "data", "processed")
-        os.makedirs(processed_dir, exist_ok=True)
+        processed_dir = path_resolver.get_path("data/processed")
+        processed_dir.mkdir(parents=True, exist_ok=True)
 
-        filepath = os.path.join(processed_dir, filename)
+        filepath = processed_dir / filename
         df.to_csv(filepath, index=False)
-        return filepath
+        return str(filepath)
 
     def _load_processed_data(self, filename):
         """Load DataFrame from processed directory"""
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        filepath = os.path.join(base_dir, "data", "processed", filename)
+        filepath = path_resolver.get_path(f"data/processed/{filename}")
 
-        if os.path.exists(filepath):
+        if filepath.exists():
             return pd.read_csv(filepath)
         else:
             return pd.DataFrame()
 
     def _load_json(self, filename):
         """Load JSON from processed directory"""
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-
         # Try processed dir first
-        filepath = os.path.join(base_dir, "data", "processed", filename)
-        if not os.path.exists(filepath):
+        filepath = path_resolver.get_path(f"data/processed/{filename}")
+        if not filepath.exists():
             # Try models dir
-            filepath = os.path.join(base_dir, "data", "models", filename)
+            filepath = path_resolver.get_path(f"data/models/{filename}")
 
-        if os.path.exists(filepath):
+        if filepath.exists():
             with open(filepath, 'r') as f:
                 return json.load(f)
         else:
@@ -386,16 +383,15 @@ class CrewOrchestrator:
 
     def _load_validation_log(self):
         """Load validation alerts from log file"""
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        reports_dir = path_resolver.get_path("data/reports")
         log_files = []
 
-        reports_dir = os.path.join(base_dir, "data", "reports")
-        if os.path.exists(reports_dir):
+        if reports_dir.exists():
             log_files = [f for f in os.listdir(reports_dir) if f.startswith('validation_log')]
 
         if log_files:
             latest_log = sorted(log_files)[-1]
-            filepath = os.path.join(reports_dir, latest_log)
+            filepath = reports_dir / latest_log
 
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.read()
@@ -407,15 +403,14 @@ class CrewOrchestrator:
 
     def _find_latest_report(self):
         """Find most recent EDA report"""
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        reports_dir = os.path.join(base_dir, "data", "reports")
+        reports_dir = path_resolver.get_path("data/reports")
 
-        if os.path.exists(reports_dir):
+        if reports_dir.exists():
             html_files = [f for f in os.listdir(reports_dir) if f.startswith('eda_report') and f.endswith('.html')]
 
             if html_files:
                 latest = sorted(html_files)[-1]
-                return os.path.join(reports_dir, latest)
+                return str(reports_dir / latest)
 
         return None
 

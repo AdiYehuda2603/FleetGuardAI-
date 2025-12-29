@@ -1,10 +1,7 @@
 import os
 import pandas as pd
 from openai import OpenAI
-from dotenv import load_dotenv
-
-# טעינת משתני סביבה מקובץ .env
-load_dotenv()
+from src.utils.config_loader import config
 
 try:
     from src.database_manager import DatabaseManager
@@ -19,8 +16,8 @@ except ImportError:
 
 class FleetAIEngine:
     def __init__(self, api_key=None):
-        # מנסה למשוך מפתח מהסביבה או מהארגומנט
-        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        # משתמש ב-ConfigLoader שתומך גם ב-Streamlit Secrets וגם ב-.env
+        self.api_key = api_key or config.get("OPENAI_API_KEY")
         if not self.api_key:
             print("⚠️ Warning: No OpenAI API Key found. AI features will not work.")
 

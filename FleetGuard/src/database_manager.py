@@ -1,41 +1,18 @@
 import sqlite3
 import pandas as pd
 import os
+from src.utils.path_resolver import path_resolver
 
 class DatabaseManager:
     def __init__(self, db_path=None):
         """
         מאתחל את החיבור לדאטה בייס.
-        אם לא התקבל נתיב, הוא מנסה למצוא אותו אוטומטית לפי המבנה שלנו.
+        אם לא התקבל נתיב, משתמש ב-PathResolver למציאה אוטומטית.
         """
         if db_path is None:
-            # מציאת הנתיב הנכון - משתמש ב-__file__ כדי למצוא את תיקיית FleetGuard
-            # __file__ הוא הנתיב של הקובץ הנוכחי (database_manager.py)
-            current_file = os.path.abspath(__file__)
-            # current_file = .../FleetGuard/src/database_manager.py
-            # נרצה להגיע ל-.../FleetGuard/data/database/fleet.db
-            
-            # עלה 2 רמות: src -> FleetGuard
-            base_dir = os.path.dirname(os.path.dirname(current_file))
-            # base_dir = .../FleetGuard
-            
-            self.db_path = os.path.join(base_dir, "data", "database", "fleet.db")
-            
-            # אם עדיין לא נמצא, נסה נתיבים נוספים
-            if not os.path.exists(self.db_path):
-                # נסה נתיבים חלופיים
-                alt_paths = [
-                    # אם רץ מתוך FleetGuard
-                    os.path.join(os.getcwd(), "data", "database", "fleet.db"),
-                    # אם רץ מתוך FleetGuardAI
-                    os.path.join(os.getcwd(), "FleetGuard", "data", "database", "fleet.db"),
-                    # אם רץ מתוך src
-                    os.path.join(os.path.dirname(os.getcwd()), "data", "database", "fleet.db"),
-                ]
-                for alt_path in alt_paths:
-                    if os.path.exists(alt_path):
-                        self.db_path = alt_path
-                        break
+            # שימוש ב-PathResolver לקבלת נתיב מוחלט
+            # עובד בכל סביבה - local, cloud, tests
+            self.db_path = str(path_resolver.get_db_path('fleet.db'))
         else:
             self.db_path = db_path
 

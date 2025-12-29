@@ -7,6 +7,7 @@ import sqlite3
 import hashlib
 import os
 from datetime import datetime
+from src.utils.path_resolver import path_resolver
 
 # Import streamlit only when needed (lazy import)
 try:
@@ -41,31 +42,12 @@ class AuthManager:
     def __init__(self, db_path=None):
         """Initialize AuthManager with database path"""
         if db_path is None:
-            # Try multiple paths to find the correct one
-            possible_paths = [
-                # If running from FleetGuard directory
-                os.path.join(os.getcwd(), "data", "database", "users.db"),
-                # If running from parent directory
-                os.path.join(os.path.dirname(os.getcwd()), "FleetGuard", "data", "database", "users.db"),
-                # Relative to this file
-                os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "database", "users.db"),
-            ]
-            
-            # Find the first path where the data/database directory exists
-            for path in possible_paths:
-                db_dir = os.path.dirname(path)
-                if os.path.exists(db_dir) or os.path.exists(os.path.dirname(db_dir)):
-                    self.db_path = path
-                    # Create directory if it doesn't exist
-                    os.makedirs(os.path.dirname(path), exist_ok=True)
-                    break
-            else:
-                # Default fallback
-                self.db_path = os.path.join(os.getcwd(), "data", "database", "users.db")
-                os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+            # שימוש ב-PathResolver לקבלת נתיב מוחלט
+            # עובד בכל סביבה - local, cloud, tests
+            self.db_path = str(path_resolver.get_db_path('users.db'))
         else:
             self.db_path = db_path
-        
+
         # Ensure directory exists
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         

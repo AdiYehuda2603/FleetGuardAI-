@@ -20,9 +20,13 @@ warnings.filterwarnings('ignore')
 try:
     from src.database_manager import DatabaseManager
     from src.predictive_agent import PredictiveMaintenanceAgent
+    from src.utils.file_handler import file_handler
+    from src.utils.path_resolver import path_resolver
 except ImportError:
     from database_manager import DatabaseManager
     from predictive_agent import PredictiveMaintenanceAgent
+    from utils.file_handler import file_handler
+    from utils.path_resolver import path_resolver
 
 
 class FleetMLTrainer:
@@ -327,38 +331,35 @@ class FleetMLTrainer:
             dict: Paths to saved model files
         """
         if output_dir is None:
-            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            output_dir = os.path.join(base_dir, "data", "models")
+            output_dir = str(path_resolver.get_path("data/models"))
 
-        os.makedirs(output_dir, exist_ok=True)
+        # Create directory if local, handled by file_handler if cloud
+        if not file_handler.is_cloud:
+            os.makedirs(output_dir, exist_ok=True)
 
         paths = {}
 
         # Save annual cost model
         if self.cost_model:
-            cost_model_path = os.path.join(output_dir, "annual_cost_predictor.pkl")
-            with open(cost_model_path, 'wb') as f:
-                pickle.dump(self.cost_model, f)
+            cost_model_data = pickle.dumps(self.cost_model)
+            cost_model_path = file_handler.write_binary("data/models/annual_cost_predictor.pkl", cost_model_data)
             paths['cost_model'] = cost_model_path
 
         # Save service cost model
         if self.service_cost_model:
-            service_model_path = os.path.join(output_dir, "service_cost_predictor.pkl")
-            with open(service_model_path, 'wb') as f:
-                pickle.dump(self.service_cost_model, f)
+            service_model_data = pickle.dumps(self.service_cost_model)
+            service_model_path = file_handler.write_binary("data/models/service_cost_predictor.pkl", service_model_data)
             paths['service_model'] = service_model_path
 
         # Save label encoders
         if self.label_encoders:
-            encoders_path = os.path.join(output_dir, "label_encoders.pkl")
-            with open(encoders_path, 'wb') as f:
-                pickle.dump(self.label_encoders, f)
+            encoders_data = pickle.dumps(self.label_encoders)
+            encoders_path = file_handler.write_binary("data/models/label_encoders.pkl", encoders_data)
             paths['encoders'] = encoders_path
 
         # Save feature names
-        features_path = os.path.join(output_dir, "feature_names.json")
-        with open(features_path, 'w') as f:
-            json.dump(self.feature_names, f)
+        features_json = json.dumps(self.feature_names)
+        features_path = file_handler.write_text("data/models/feature_names.json", features_json)
         paths['features'] = features_path
 
         return paths

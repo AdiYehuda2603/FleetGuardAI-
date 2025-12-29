@@ -69,15 +69,16 @@ class FleetGuardFlow:
 
         try:
             # בדיקה 1: קובץ נתונים מעובד קיים
-            processed_data_path = 'data/processed/fleet_data_cleaned.csv'
-            if not os.path.exists(processed_data_path):
+            from src.utils.path_resolver import path_resolver
+            processed_data_path = path_resolver.get_path('data/processed/fleet_data_cleaned.csv')
+            if not processed_data_path.exists():
                 return {
                     'passed': False,
                     'error': f'Processed data file not found: {processed_data_path}'
                 }
 
             # בדיקה 2: גודל קובץ תקין
-            file_size = os.path.getsize(processed_data_path)
+            file_size = processed_data_path.stat().st_size
             if file_size < 1000:  # לפחות 1KB
                 return {
                     'passed': False,
@@ -91,7 +92,7 @@ class FleetGuardFlow:
                 'reports/maintenance_analysis.json'
             ]
 
-            missing_reports = [r for r in required_reports if not os.path.exists(r)]
+            missing_reports = [r for r in required_reports if not path_resolver.get_path(r).exists()]
             if missing_reports:
                 return {
                     'passed': False,
