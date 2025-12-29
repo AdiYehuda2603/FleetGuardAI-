@@ -13,7 +13,7 @@ fleet_guard_dir = Path(__file__).parent / "FleetGuard"
 sys.path.insert(0, str(fleet_guard_dir))
 
 # Import and run the main app
-from app import main
+from main import main
 
 if __name__ == "__main__":
     main()

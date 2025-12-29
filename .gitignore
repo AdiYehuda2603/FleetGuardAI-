@@ -1,5 +1,6 @@
 # Database files
 *.db
+!FleetGuard/data/database/fleet.db
 *.sqlite
 *.sqlite3
 
@@ -27,7 +28,7 @@ ENV/
 Thumbs.db
 
 # Project specific
-FleetGuard/data/*.db
+# FleetGuard/data/*.db  # Commented - we need fleet.db for Streamlit Cloud
 FleetGuard/models/*.png
 FleetGuard/reports/*.png
 FleetGuard/reports/*.json
