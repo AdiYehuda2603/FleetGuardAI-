@@ -1,0 +1,24 @@
+[logger]
+level = "error"
+
+[logger.message]
+level = "error"
+
+[server]
+headless = true
+enableXsrfProtection = false
+
+[runner]
+fastReruns = true
+magicEnabled = true
+
+[client]
+showErrorDetails = false
+
+[theme]
+primaryColor = "#FF4B4B"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+font = "sans serif"
+
