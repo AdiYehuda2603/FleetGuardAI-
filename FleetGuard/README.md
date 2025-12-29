@@ -718,6 +718,18 @@ This project is submitted as part of academic coursework and is intended for edu
 
 ---
 
+## 📚 References
+
+### Industry Research - ROI Estimates
+
+1. **Bär, K., Herbert, G., & Theobald, S. (2022).** *Prediction at scale: How industry can get more value out of maintenance*. McKinsey & Company. https://www.mckinsey.com/capabilities/operations/our-insights/prediction-at-scale-how-industry-can-get-more-value-out-of-maintenance
+
+2. **Deloitte Development LLC. (2017).** *Predictive maintenance: Taking pro-active measures based on advanced data analytics to predict and avoid machine failures*. https://www2.deloitte.com/content/dam/Deloitte/us/Documents/process-and-operations/us-predictive-maintenance.pdf
+
+3. **Bachmann, R., Garbade, K., Lüth, H., & Steinhilper, R. (2020).** *Using predictive technologies for asset maintenance in Industry 4.0*. Deloitte Insights. https://www2.deloitte.com/us/en/insights/focus/industry-4-0/using-predictive-technologies-for-asset-maintenance.html
+
+---
+
 **Last Updated:** December 28, 2025
 **Version:** 2.0.0
 **Status:** ✅ Production Ready (Enhanced with UX improvements)

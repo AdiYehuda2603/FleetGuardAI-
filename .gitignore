@@ -46,3 +46,7 @@ setup_project.py
 implementation_plan.md
 UI_IMPROVEMENTS_SUMMARY.md
 fleetguard_price_bias_he/
+
+# Presentation files (examples only, not for Git)
+*.pptx
+create_presentation.py
