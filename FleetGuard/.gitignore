@@ -80,6 +80,8 @@ models/*.pth
 !models/model_metadata.json
 !models/models_comparison.json
 !models/model_card.md
+# Exception: Include pre-trained model for Streamlit Cloud deployment
+!models/model.pkl
 
 # Reports (optional - can regenerate)
 reports/*.html
