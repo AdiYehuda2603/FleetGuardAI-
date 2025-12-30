@@ -129,6 +129,19 @@ class FleetAIEngine:
             print(f"Error creating strategic summary: {e}")
             return {}
 
+    def _get_maintenance_insights(self):
+        """
+        קבלת ניתוחים מתקדמים של תחזוקה
+        כולל: קשר קילומטראז'-טיפולים, השפעת איחורים, השוואת דפוסי תחזוקה
+        """
+        try:
+            from src.maintenance_analytics import MaintenanceAnalytics
+            analytics = MaintenanceAnalytics(self.db)
+            return analytics.get_comprehensive_maintenance_insights()
+        except Exception as e:
+            print(f"Error getting maintenance insights: {e}")
+            return {}
+
     def _analyze_drivers(self):
         """
         ניתוח מעמיק של ביצועי נהגים
@@ -327,6 +340,7 @@ class FleetAIEngine:
         """
         הפונקציה המרכזית: מקבלת שאלה בעברית, ומחזירה תשובה מבוססת נתונים
         כולל גישה מלאה לנתונים אסטרטגיים מ-Agent H וניתוח נהגים
+        וניתוחים מתקדמים של קילומטראז', עיתוי טיפולים ועלויות
         """
         # יצירת סיכום קומפקטי במקום לשלוח את כל הנתונים
         data_summary = self._create_data_summary()
@@ -339,6 +353,9 @@ class FleetAIEngine:
 
         # נתונים מלאים מכל הטבלאות
         full_data = self._get_full_data_context()
+
+        # ניתוחים מתקדמים של תחזוקה
+        maintenance_insights = self._get_maintenance_insights()
 
         # 3. בניית הפרומפט עם סיכום מלא כולל קילומטראז'
         # פורמט מידע על קילומטראז'
@@ -487,6 +504,11 @@ class FleetAIEngine:
         {driver_info}
         ═══════════════════════════════════════════════════════════════════
 
+        ═══════════════════════════════════════════════════════════════════
+        **ADVANCED MAINTENANCE ANALYTICS (ניתוחים מתקדמים):**
+        {self._format_maintenance_insights(maintenance_insights)}
+        ═══════════════════════════════════════════════════════════════════
+
         {data_schema_info}
 
         **IMPORTANT INSTRUCTIONS:**
@@ -514,8 +536,18 @@ class FleetAIEngine:
            - How is driver X performing? (search in DRIVER PERFORMANCE ANALYSIS)
            - Which driver has the most/least service costs?
            - If a vehicle has many services, identify the assigned driver from fleet data
-        10. You have access to ALL database columns listed in AVAILABLE DATA SCHEMA
-        11. You can perform data cross-analysis:
+        10. You can now answer ADVANCED MAINTENANCE ANALYTICS questions:
+           - What is the relationship between mileage and maintenance frequency?
+           - How much more expensive are late/delayed maintenance services?
+           - Do vehicles maintained on-time cost less than those with delays?
+           - What is the average KM between services?
+           - Which vehicles need frequent maintenance relative to their mileage?
+           - What is the cost impact of delaying maintenance?
+           - Use ODOMETER ANALYSIS for KM-related insights
+           - Use TIMING COST IMPACT for late maintenance analysis
+           - Use COMPLIANCE COMPARISON for on-time vs delayed cost analysis
+        11. You have access to ALL database columns listed in AVAILABLE DATA SCHEMA
+        12. You can perform data cross-analysis:
             - Join fleet data with invoice data using vehicle_id
             - Analyze patterns by driver, vehicle model, workshop
             - Find correlations (e.g., high-cost vehicles and their drivers)
@@ -546,6 +578,83 @@ class FleetAIEngine:
             else:
                 lines.append(f"  {key}: {values}")
         return "\n".join(lines)
+
+    def _format_maintenance_insights(self, insights: dict) -> str:
+        """עיצוב תובנות תחזוקה מתקדמות"""
+        if not insights or 'error' in str(insights):
+            return "אין נתונים זמינים לניתוח מתקדם"
+
+        output = []
+
+        # ניתוח קילומטראז' לעומת שכיחות טיפולים
+        odometer = insights.get('odometer_analysis', {})
+        if odometer and 'error' not in odometer:
+            output.append("\n📊 ODOMETER vs MAINTENANCE FREQUENCY (קילומטראז' לעומת תדירות טיפולים):")
+            output.append(f"  • Correlation: {odometer.get('correlation_km_services', 0):.3f}")
+            output.append(f"  • Average KM per Service: {odometer.get('average_km_per_service', 0):,.0f} km")
+            output.append(f"  • Median KM per Service: {odometer.get('median_km_per_service', 0):,.0f} km")
+            output.append(f"  • Average Cost per KM: ₪{odometer.get('average_cost_per_km', 0):.3f}")
+            output.append(f"  • Interpretation: {odometer.get('interpretation', 'N/A')}")
+
+            high_maint = odometer.get('high_maintenance_vehicles', [])
+            if high_maint:
+                output.append(f"  • High-Frequency Maintenance Vehicles ({len(high_maint)} vehicles):")
+                for v in high_maint[:3]:
+                    output.append(f"    - {v['vehicle_id']} ({v['plate']}): {v['km_per_service']:,.0f} km/service")
+
+        # השפעת איחורים על עלויות
+        timing = insights.get('timing_cost_impact', {})
+        if timing and 'error' not in timing:
+            output.append("\n⏰ TIMING COST IMPACT (השפעת עיתוי על עלויות):")
+
+            on_time = timing.get('on_time_maintenance', {})
+            late = timing.get('late_maintenance', {})
+            early = timing.get('early_maintenance', {})
+            impact = timing.get('cost_impact', {})
+
+            if on_time:
+                output.append(f"  • On-Time Maintenance ({on_time['count']} services):")
+                output.append(f"    - Average Cost: ₪{on_time['average_cost']:,.2f}")
+                output.append(f"    - Total Cost: ₪{on_time['total_cost']:,.2f}")
+
+            if late:
+                output.append(f"  • Late Maintenance ({late['count']} services, avg delay: {late.get('average_delay_days', 0):.1f} days):")
+                output.append(f"    - Average Cost: ₪{late['average_cost']:,.2f}")
+                output.append(f"    - Total Cost: ₪{late['total_cost']:,.2f}")
+
+            if impact:
+                increase = impact.get('late_vs_on_time_increase_pct', 0)
+                diff = impact.get('late_vs_on_time_difference', 0)
+                output.append(f"  • Cost Impact of Delays:")
+                output.append(f"    - Late services cost {increase:+.1f}% more (₪{diff:+,.2f} difference)")
+                output.append(f"  • Interpretation: {timing.get('interpretation', 'N/A')}")
+
+        # השוואת דפוסי תחזוקה
+        compliance = insights.get('compliance_comparison', {})
+        if compliance and 'error' not in compliance:
+            output.append("\n✅ COMPLIANCE COMPARISON (השוואת דפוסי תחזוקה):")
+
+            categories = compliance.get('timing_categories', {})
+            for cat_name, cat_data in categories.items():
+                cat_label = {
+                    'on_time': 'On-Time Maintenance',
+                    'moderate_delay': 'Moderate Delays',
+                    'significant_delay': 'Significant Delays'
+                }.get(cat_name, cat_name)
+
+                output.append(f"  • {cat_label} ({cat_data['vehicle_count']} vehicles):")
+                output.append(f"    - Avg Total Cost/Vehicle: ₪{cat_data['average_total_cost']:,.2f}")
+                output.append(f"    - Avg Cost/Service: ₪{cat_data['average_cost_per_service']:,.2f}")
+                output.append(f"    - Avg Compliance Score: {cat_data['average_compliance']:.1f}%")
+
+            comp_insights = compliance.get('insights', {})
+            if comp_insights:
+                savings = comp_insights.get('potential_savings_per_vehicle', 0)
+                if savings > 0:
+                    output.append(f"  • 💰 Potential Savings: ₪{savings:,.2f} per vehicle by improving compliance")
+                output.append(f"  • Recommendation: {comp_insights.get('recommendation', 'N/A')}")
+
+        return "\n".join(output) if output else "אין תובנות זמינות"
 
 # --- בדיקה מהירה (אם מריצים את הקובץ ישירות) ---
 if __name__ == "__main__":
