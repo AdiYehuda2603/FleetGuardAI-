@@ -55,3 +55,10 @@ fleetguard_price_bias_he/
 # Presentation files (examples only, not for Git)
 *.pptx
 create_presentation.py
+
+# Personal workflow files (keep locally, exclude from Git)
+demo_video_script.md
+presentation_slides.md
+STREAMLIT_CLOUD_SETUP.md
+DEPLOY_TO_STREAMLIT_CLOUD.md
+QUICK_DEPLOY_STEPS.md
