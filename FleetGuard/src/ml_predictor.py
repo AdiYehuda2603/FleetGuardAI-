@@ -27,9 +27,10 @@ class MLPredictor:
     def load_model(self):
         """טוען את המודל ה-Metadata"""
         try:
-            # נתיבים
-            model_path = Path("models/model.pkl")
-            metadata_path = Path("models/model_metadata.json")
+            # נתיבים - שימוש ב-path_resolver לתמיכה ב-Streamlit Cloud
+            from src.utils.path_resolver import path_resolver
+            model_path = path_resolver.get_model_path("model.pkl")
+            metadata_path = path_resolver.get_model_path("model_metadata.json")
 
             # טעינת מודל
             if model_path.exists():
