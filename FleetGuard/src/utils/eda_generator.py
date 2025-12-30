@@ -14,11 +14,6 @@ import os
 import warnings
 warnings.filterwarnings('ignore')
 
-try:
-    from src.database_manager import DatabaseManager
-except ImportError:
-    from database_manager import DatabaseManager
-
 
 class EDAGenerator:
     """
@@ -26,6 +21,12 @@ class EDAGenerator:
     """
 
     def __init__(self):
+        # Lazy import to avoid circular dependency
+        try:
+            from src.database_manager import DatabaseManager
+        except ImportError:
+            from database_manager import DatabaseManager
+
         self.db = DatabaseManager()
         self.insights = {}
 

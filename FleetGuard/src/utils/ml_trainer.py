@@ -17,14 +17,11 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import warnings
 warnings.filterwarnings('ignore')
 
+# Import utilities (no circular dependency)
 try:
-    from src.database_manager import DatabaseManager
-    from src.predictive_agent import PredictiveMaintenanceAgent
     from src.utils.file_handler import file_handler
     from src.utils.path_resolver import path_resolver
 except ImportError:
-    from database_manager import DatabaseManager
-    from predictive_agent import PredictiveMaintenanceAgent
     from utils.file_handler import file_handler
     from utils.path_resolver import path_resolver
 
@@ -37,6 +34,14 @@ class FleetMLTrainer:
     """
 
     def __init__(self):
+        # Lazy import to avoid circular dependency
+        try:
+            from src.database_manager import DatabaseManager
+            from src.predictive_agent import PredictiveMaintenanceAgent
+        except ImportError:
+            from database_manager import DatabaseManager
+            from predictive_agent import PredictiveMaintenanceAgent
+
         self.db = DatabaseManager()
         self.pred_agent = PredictiveMaintenanceAgent()
 
