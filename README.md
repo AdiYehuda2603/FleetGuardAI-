@@ -31,10 +31,13 @@ FleetGuardAI is an industry-simulated AI product workflow that combines **CrewAI
 **Tech Stack:** Python, CrewAI, Streamlit, scikit-learn, OpenAI GPT-4o-mini
 **Dataset:** 85 vehicles, 1,012 maintenance invoices (real fleet data)
 **Model:** Gradient Boosting Regressor | RMSE: ₪16.72 | MAE: ₪13.88 | MAPE: 5.54%
-**Impact:** 15-25% cost reduction through predictive maintenance
+**Prediction Accuracy:** ±₪13.88 average error on unseen data (5.54% MAPE)
 **Deliverables:** ✅ All required outputs (clean_data.csv, features.csv, model.pkl, reports, model_card.md)
 
-**Key Innovation:** Dataset contract validation between crews ensures data quality pipeline integrity.
+**Key Innovations:**
+- Dataset contract validation between crews ensures data quality pipeline integrity
+- Driver performance ranking with maintenance compliance scoring
+- Advanced maintenance analytics (odometer correlation, timing cost impact analysis)
 
 ---
 
@@ -66,10 +69,12 @@ FleetGuardAI addresses real-world challenges faced by organizations managing veh
 ### Project Mission
 
 Transform historical fleet data into actionable insights and accurate cost predictions, enabling:
-- **15-25% reduction** in maintenance costs
-- **Proactive budgeting** with monthly cost forecasts
-- **Data-driven vehicle replacement** decisions
+- **Predictive cost forecasting** with 96.4% accuracy (R² = 0.9638)
+- **Proactive budgeting** with monthly cost forecasts (±₪13.88 error)
+- **Data-driven vehicle replacement** decisions based on ML predictions
 - **Real-time alerting** for maintenance overdue and anomalies
+- **Driver performance tracking** with maintenance compliance scoring
+- **Maintenance analytics** examining odometer correlations and timing cost impacts
 
 ---
 
@@ -95,12 +100,14 @@ FleetGuardAI provides:
 
 ### Business Value
 
-| Metric | Impact |
-|--------|--------|
-| **Cost Savings** | 15-25% reduction in maintenance expenses |
-| **Prediction Accuracy** | ±₪13.88 average error (MAPE: 5.54%) |
-| **Downtime Prevention** | Early failure detection through alerts |
-| **Decision Speed** | Instant insights via AI chatbot |
+| Metric | Measured Value |
+|--------|----------------|
+| **Prediction Accuracy** | R² = 0.9638 (96.38% variance explained) |
+| **Forecast Error** | ±₪13.88 average error (MAPE: 5.54%) |
+| **Model Performance** | RMSE = ₪16.72 per month |
+| **Alert Categories** | 5 real-time risk detection types |
+| **Decision Speed** | Instant AI-powered insights via chatbot |
+| **Driver Analytics** | Maintenance compliance scoring (0-100%) |
 
 ---
 
@@ -195,10 +202,12 @@ FleetGuardAI implements a **two-crew multi-agent architecture** coordinated by C
 - **Natural language queries** in Hebrew/English
 - **OpenAI GPT-4o-mini** integration
 - **Data summarization** for efficient API usage
+- **Enhanced with maintenance analytics**: Answers questions about odometer correlations, timing cost impacts
 - **Example queries:**
   - "Which workshop is most expensive?"
   - "Show me vehicles needing retirement"
-  - "Predict next month's maintenance budget"
+  - "What's the correlation between mileage and maintenance frequency?"
+  - "How much more expensive is delayed maintenance?"
 
 ### 5. Rules-Based Alerting System
 - **Maintenance Overdue:** 10,000 km or 180 days threshold
@@ -207,10 +216,23 @@ FleetGuardAI implements a **two-crew multi-agent architecture** coordinated by C
 - **High Utilization:** >3,000 km/month detection
 - **Workshop Quality:** 50% above average pricing alerts
 
-### 6. User Authentication
+### 6. Driver Performance Analytics
+- **Top 3 Best/Worst Drivers** ranking display
+- **Maintenance compliance scoring** (0-100% on-time rate)
+- **Performance score formula**: Balances cost efficiency, service frequency, and schedule compliance
+- **Real-time tracking** of 86 drivers across fleet
+
+### 7. Advanced Maintenance Analytics
+- **Odometer vs Maintenance Frequency**: Statistical correlation analysis
+- **Late Maintenance Cost Impact**: Quantifies cost difference between on-time and delayed service
+- **Timing Compliance Analysis**: Groups vehicles by timing patterns, calculates potential savings
+- **Integrated into AI Analyst**: Analytics available via natural language queries
+
+### 8. User Authentication & Security
 - Secure login/registration system
 - Password hashing (SHA256)
 - Session management
+- Per-user custom alerts and preferences
 
 ---
 
@@ -430,8 +452,9 @@ FleetGuardAI/
 │   │   │   ├── ml_trainer.py                # Model training utilities
 │   │   │   └── contract_validator.py        # Contract enforcement
 │   │   ├── database_manager.py              # Database operations (27 KB)
-│   │   ├── ai_engine.py                     # OpenAI chatbot integration (24 KB)
-│   │   ├── ml_predictor.py                  # Model inference engine
+│   │   ├── ai_engine.py                     # OpenAI chatbot + driver analytics (32 KB)
+│   │   ├── maintenance_analytics.py         # Advanced maintenance analysis (18 KB)
+│   │   ├── ml_predictor.py                  # Model inference engine (cloud-compatible)
 │   │   ├── crew_flow.py                     # CrewAI Flow orchestrator (22 KB)
 │   │   ├── rules_engine.py                  # Alert system (18 KB)
 │   │   ├── retirement_calculator.py         # Vehicle retirement logic
@@ -655,10 +678,15 @@ This project is submitted as part of academic coursework and is intended for edu
 
 ## 📈 Future Roadmap
 
+### Recently Completed
+- [x] **Driver performance ranking** with maintenance compliance scoring
+- [x] **Advanced maintenance analytics** module (odometer correlation, timing cost analysis)
+- [x] **Cloud deployment compatibility** (Streamlit Cloud path fixes)
+- [x] **Enhanced AI Analyst** with integrated maintenance insights
+
 ### Planned Enhancements
 - [ ] **Real-time data ingestion** via API
 - [ ] **Advanced anomaly detection** using Isolation Forest
-- [ ] **Driver behavior scoring** system
 - [ ] **Mobile app** for field technicians
 - [ ] **Integration with ERP systems** (SAP, Oracle)
 - [ ] **Predictive parts inventory** management
@@ -678,6 +706,6 @@ This project is submitted as part of academic coursework and is intended for edu
 
 ---
 
-**Last Updated:** December 23, 2025
-**Version:** 1.0.0
-**Status:** ✅ Production Ready
+**Last Updated:** December 30, 2025
+**Version:** 2.1.0
+**Status:** ✅ Production Ready (Enhanced with driver analytics & maintenance insights)

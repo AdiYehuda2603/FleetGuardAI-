@@ -694,10 +694,14 @@ This project is submitted as part of academic coursework and is intended for edu
 
 ## 📈 Future Roadmap
 
+### Recently Completed
+- [x] **Driver performance ranking** with maintenance compliance scoring (v2.1.0)
+- [x] **Advanced maintenance analytics** module (v2.1.0)
+- [x] **Cloud deployment compatibility** for Streamlit Cloud (v2.1.0)
+
 ### Planned Enhancements
 - [ ] **Real-time data ingestion** via API
 - [ ] **Advanced anomaly detection** using Isolation Forest
-- [ ] **Driver behavior scoring** system
 - [ ] **Mobile app** for field technicians
 - [ ] **Integration with ERP systems** (SAP, Oracle)
 - [ ] **Predictive parts inventory** management
@@ -730,6 +734,6 @@ This project is submitted as part of academic coursework and is intended for edu
 
 ---
 
-**Last Updated:** December 28, 2025
-**Version:** 2.0.0
-**Status:** ✅ Production Ready (Enhanced with UX improvements)
+**Last Updated:** December 30, 2025
+**Version:** 2.1.0
+**Status:** ✅ Production Ready (Enhanced with driver analytics & maintenance insights)
