@@ -999,8 +999,10 @@ with tab3:
                 st.subheader("📊 השוואה בין רכבים")
 
                 try:
-                    features_path = "data/processed/features.csv"
-                    if os.path.exists(features_path):
+                    from src.utils.path_resolver import path_resolver
+                    features_path = path_resolver.get_path("data/processed/features.csv")
+
+                    if features_path.exists():
                         import pandas as pd
                         features_df = pd.read_csv(features_path)
 
@@ -2241,17 +2243,32 @@ with tab9:
                 all_drivers = driver_analysis.get('all_drivers', [])
                 if all_drivers:
                     drivers_df = pd.DataFrame(all_drivers)
-                    drivers_df = drivers_df[['driver', 'num_vehicles', 'total_services', 'total_cost', 'avg_cost_per_vehicle', 'maintenance_compliance', 'performance_score']]
-                    drivers_df.columns = ['נהג', 'מס\' רכבים', 'סה"כ טיפולים', 'עלות כוללת', 'ממוצע לרכב', 'עמידה בזמנים (%)', 'ציון ביצועים']
+
+                    # Select only columns that exist (defensive programming)
+                    available_cols = ['driver', 'num_vehicles', 'total_services', 'total_cost',
+                                      'avg_cost_per_vehicle', 'performance_score']
+                    if 'maintenance_compliance' in drivers_df.columns:
+                        available_cols.insert(-1, 'maintenance_compliance')  # Before performance_score
+
+                    drivers_df = drivers_df[available_cols]
+
+                    # Rename columns for display
+                    col_names = ['נהג', 'מס\' רכבים', 'סה"כ טיפולים', 'עלות כוללת', 'ממוצע לרכב']
+                    format_dict = {
+                        'עלות כוללת': '₪{:,.0f}',
+                        'ממוצע לרכב': '₪{:,.0f}',
+                        'ציון ביצועים': '{:.1f}'
+                    }
+                    if 'maintenance_compliance' in drivers_df.columns:
+                        col_names.append('עמידה בזמנים (%)')
+                        format_dict['עמידה בזמנים (%)'] = '{:.1f}%'
+                    col_names.append('ציון ביצועים')
+
+                    drivers_df.columns = col_names
 
                     # עיצוב הטבלה
                     st.dataframe(
-                        drivers_df.style.format({
-                            'עלות כוללת': '₪{:,.0f}',
-                            'ממוצע לרכב': '₪{:,.0f}',
-                            'עמידה בזמנים (%)': '{:.1f}%',
-                            'ציון ביצועים': '{:.1f}'
-                        }),
+                        drivers_df.style.format(format_dict),
                         use_container_width=True
                     )
 
