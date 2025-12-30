@@ -2196,13 +2196,17 @@ with tab9:
                         for i, driver in enumerate(top_drivers, 1):
                             with st.container():
                                 st.markdown(f"**{i}. {driver['driver']}**")
-                                metric_col1, metric_col2 = st.columns(2)
+                                metric_col1, metric_col2, metric_col3 = st.columns(3)
                                 with metric_col1:
                                     st.metric("רכבים", driver['num_vehicles'])
                                     st.metric("טיפולים", driver['total_services'])
                                 with metric_col2:
                                     st.metric("עלות כוללת", f"₪{driver['total_cost']:,.0f}")
                                     st.metric("ממוצע/רכב", f"₪{driver['avg_cost_per_vehicle']:,.0f}")
+                                with metric_col3:
+                                    compliance = driver.get('maintenance_compliance', 0)
+                                    st.metric("עמידה בזמנים", f"{compliance:.1f}%")
+                                    st.metric("ציון ביצועים", f"{driver['performance_score']:.1f}")
                                 st.caption(f"🚗 רכבים: {', '.join(driver['vehicles'])}")
                                 st.markdown("---")
                     else:
@@ -2216,13 +2220,17 @@ with tab9:
                         for i, driver in enumerate(bottom_drivers, 1):
                             with st.container():
                                 st.markdown(f"**{i}. {driver['driver']}**")
-                                metric_col1, metric_col2 = st.columns(2)
+                                metric_col1, metric_col2, metric_col3 = st.columns(3)
                                 with metric_col1:
                                     st.metric("רכבים", driver['num_vehicles'])
                                     st.metric("טיפולים", driver['total_services'])
                                 with metric_col2:
                                     st.metric("עלות כוללת", f"₪{driver['total_cost']:,.0f}")
                                     st.metric("ממוצע/רכב", f"₪{driver['avg_cost_per_vehicle']:,.0f}")
+                                with metric_col3:
+                                    compliance = driver.get('maintenance_compliance', 0)
+                                    st.metric("עמידה בזמנים", f"{compliance:.1f}%")
+                                    st.metric("ציון ביצועים", f"{driver['performance_score']:.1f}")
                                 st.caption(f"🚗 רכבים: {', '.join(driver['vehicles'])}")
                                 st.markdown("---")
                     else:
@@ -2233,14 +2241,15 @@ with tab9:
                 all_drivers = driver_analysis.get('all_drivers', [])
                 if all_drivers:
                     drivers_df = pd.DataFrame(all_drivers)
-                    drivers_df = drivers_df[['driver', 'num_vehicles', 'total_services', 'total_cost', 'avg_cost_per_vehicle', 'performance_score']]
-                    drivers_df.columns = ['נהג', 'מס\' רכבים', 'סה"כ טיפולים', 'עלות כוללת', 'ממוצע לרכב', 'ציון ביצועים']
+                    drivers_df = drivers_df[['driver', 'num_vehicles', 'total_services', 'total_cost', 'avg_cost_per_vehicle', 'maintenance_compliance', 'performance_score']]
+                    drivers_df.columns = ['נהג', 'מס\' רכבים', 'סה"כ טיפולים', 'עלות כוללת', 'ממוצע לרכב', 'עמידה בזמנים (%)', 'ציון ביצועים']
 
                     # עיצוב הטבלה
                     st.dataframe(
                         drivers_df.style.format({
                             'עלות כוללת': '₪{:,.0f}',
                             'ממוצע לרכב': '₪{:,.0f}',
+                            'עמידה בזמנים (%)': '{:.1f}%',
                             'ציון ביצועים': '{:.1f}'
                         }),
                         use_container_width=True

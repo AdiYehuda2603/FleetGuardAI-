@@ -133,13 +133,19 @@ class FleetAIEngine:
         """
         ניתוח מעמיק של ביצועי נהגים
         מזהה נהגים מצטיינים ונהגים שצריכים שיפור
+        כולל מדד עמידה ביעדי טיפול בזמן
         """
         try:
+            from datetime import datetime, timedelta
+
             # קבלת נתוני צי מלאים עם נהגים
             fleet_df = self.db.get_fleet_overview()
 
             if fleet_df.empty or 'assigned_to' not in fleet_df.columns:
                 return {}
+
+            # קבלת נתוני טיפולים (invoices) לחישוב עמידה בזמנים
+            invoices_df = self.db.get_all_invoices()
 
             # ניתוח לפי נהג
             driver_stats = []
@@ -149,6 +155,7 @@ class FleetAIEngine:
                     continue
 
                 driver_vehicles = fleet_df[fleet_df['assigned_to'] == driver]
+                vehicle_ids = driver_vehicles['vehicle_id'].tolist()
 
                 total_services = driver_vehicles['total_services'].sum()
                 total_cost = driver_vehicles['total_cost'].sum()
@@ -156,9 +163,19 @@ class FleetAIEngine:
                 avg_cost_per_vehicle = total_cost / num_vehicles if num_vehicles > 0 else 0
                 avg_services_per_vehicle = total_services / num_vehicles if num_vehicles > 0 else 0
 
-                # חישוב ציון ביצועים (ככל שנמוך יותר - טוב יותר)
-                # משקלל עלויות וכמות תקלות
-                performance_score = (avg_cost_per_vehicle / 1000) + (avg_services_per_vehicle * 5)
+                # חישוב עמידה ביעדי טיפול בזמן (Maintenance Compliance)
+                maintenance_compliance = self._calculate_maintenance_compliance(
+                    vehicle_ids, driver_vehicles, invoices_df
+                )
+
+                # חישוב ציון ביצועים משופר (ככל שנמוך יותר - טוב יותר)
+                # נוסחה: עלות ממוצעת + תדירות תקלות - בונוס לעמידה בזמנים
+                # ציון נמוך = נהג טוב (עלויות נמוכות, מעט תקלות, עמידה גבוה בזמנים)
+                performance_score = (
+                    (avg_cost_per_vehicle / 1000) +  # עלות (משקל 1)
+                    (avg_services_per_vehicle * 5) -  # תדירות תקלות (משקל 5)
+                    (maintenance_compliance * 0.3)     # בונוס עמידה בזמנים (משקל -0.3)
+                )
 
                 driver_stats.append({
                     'driver': driver,
@@ -167,8 +184,9 @@ class FleetAIEngine:
                     'total_cost': total_cost,
                     'avg_cost_per_vehicle': avg_cost_per_vehicle,
                     'avg_services_per_vehicle': avg_services_per_vehicle,
+                    'maintenance_compliance': maintenance_compliance,  # אחוז עמידה בזמנים
                     'performance_score': performance_score,
-                    'vehicles': driver_vehicles['vehicle_id'].tolist()
+                    'vehicles': vehicle_ids
                 })
 
             # מיון לפי ציון ביצועים
@@ -190,6 +208,91 @@ class FleetAIEngine:
         except Exception as e:
             print(f"Error analyzing drivers: {e}")
             return {}
+
+    def _calculate_maintenance_compliance(self, vehicle_ids, vehicles_df, invoices_df):
+        """
+        חישוב אחוז עמידה בטיפולי תחזוקה בזמן
+
+        לוגיקה:
+        - בודק עבור כל רכב מתי היה הטיפול האחרון ומתי מתוכנן הבא
+        - משווה תאריכי חשבוניות לתאריכים המתוכננים
+        - מחשב אחוז של טיפולים שבוצעו בזמן (בתוך חלון של 30 יום אחרי התאריך המתוכנן)
+
+        Returns:
+            float: אחוז עמידה בזמנים (0-100)
+        """
+        try:
+            from datetime import datetime, timedelta
+
+            if invoices_df.empty or vehicles_df.empty:
+                return 50.0  # ברירת מחדל ניטרלית אם אין נתונים
+
+            total_scheduled = 0
+            on_time_count = 0
+
+            for vehicle_id in vehicle_ids:
+                # קבלת נתוני רכב ספציפי
+                vehicle_data = vehicles_df[vehicles_df['vehicle_id'] == vehicle_id]
+                if vehicle_data.empty:
+                    continue
+
+                # תאריכי בדיקה מתוכננים
+                last_test = vehicle_data.iloc[0].get('last_test_date')
+                next_test = vehicle_data.iloc[0].get('next_test_date')
+
+                if not last_test or not next_test:
+                    continue
+
+                try:
+                    last_test_dt = datetime.strptime(str(last_test), '%Y-%m-%d')
+                    next_test_dt = datetime.strptime(str(next_test), '%Y-%m-%d')
+                except (ValueError, TypeError):
+                    continue
+
+                # קבלת כל הטיפולים של הרכב הזה
+                vehicle_invoices = invoices_df[invoices_df['vehicle_id'] == vehicle_id]
+
+                if vehicle_invoices.empty:
+                    continue
+
+                # בדיקה אם היו טיפולי routine באזור התאריך המתוכנן
+                for _, invoice in vehicle_invoices.iterrows():
+                    invoice_kind = str(invoice.get('kind', ''))
+
+                    # התמקדות בטיפולי routine (תחזוקה מתוכננת)
+                    if 'routine' not in invoice_kind.lower():
+                        continue
+
+                    try:
+                        invoice_date = datetime.strptime(str(invoice['date']), '%Y-%m-%d')
+                    except (ValueError, TypeError):
+                        continue
+
+                    # בדיקה אם הטיפול היה בזמן (בתוך 30 יום אחרי התאריך האחרון)
+                    # או לפני התאריך הבא
+                    days_after_last = (invoice_date - last_test_dt).days
+                    days_before_next = (next_test_dt - invoice_date).days
+
+                    # נחשב "בזמן" אם:
+                    # 1. הטיפול היה אחרי הבדיקה האחרונה
+                    # 2. לא יותר מ-30 יום איחור מהתאריך המתוכנן
+                    if days_after_last >= 0:
+                        total_scheduled += 1
+
+                        # אם הטיפול היה לפני התאריך הבא או עד 30 יום אחריו
+                        if days_before_next >= -30:
+                            on_time_count += 1
+
+            # חישוב אחוז עמידה
+            if total_scheduled == 0:
+                return 50.0  # ברירת מחדל ניטרלית
+
+            compliance_pct = (on_time_count / total_scheduled) * 100
+            return round(compliance_pct, 1)
+
+        except Exception as e:
+            print(f"Error calculating maintenance compliance: {e}")
+            return 50.0  # ברירת מחדל במקרה של שגיאה
 
     def _get_full_data_context(self):
         """
