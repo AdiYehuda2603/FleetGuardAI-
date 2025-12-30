@@ -741,8 +741,9 @@ with tab3:
                             try:
                                 # קריאת הפיצ'רים הקיימים
                                 import pandas as pd
-                                features_path = "data/processed/features.csv"
-                                if os.path.exists(features_path):
+                                from src.utils.path_resolver import path_resolver
+                                features_path = path_resolver.get_path("data/processed/features.csv")
+                                if features_path.exists():
                                     features_df = pd.read_csv(features_path)
                                     vehicle_features = features_df[features_df['vehicle_id'] == selected_vehicle]
 
@@ -919,9 +920,10 @@ with tab3:
                 if st.button("🔮 חזה עלויות לכל הצי", type="primary"):
                     with st.spinner("מחשב תחזיות..."):
                         try:
-                            features_path = "data/processed/features.csv"
-                            if os.path.exists(features_path):
-                                import pandas as pd
+                            from src.utils.path_resolver import path_resolver
+                            import pandas as pd
+                            features_path = path_resolver.get_path("data/processed/features.csv")
+                            if features_path.exists():
                                 features_df = pd.read_csv(features_path)
 
                                 # תחזיות
