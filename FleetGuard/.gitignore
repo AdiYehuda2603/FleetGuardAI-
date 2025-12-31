@@ -69,6 +69,8 @@ data/raw/*.csv
 data/raw/*.xlsx
 data/processed/*.csv
 !data/processed/.gitkeep
+# Exception: Include features.csv for Streamlit Cloud ML predictions
+!data/processed/features.csv
 
 # Model Artifacts (large binary files)
 models/*.pkl
