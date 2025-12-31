@@ -1,7 +1,7 @@
 {
   "crew_name": "Data Scientist Crew",
   "crew_id": "CREW_2",
-  "execution_time": "1.41 seconds",
+  "execution_time": "2.10 seconds",
   "status": "SUCCESS",
   "steps": {
     "feature_engineering": {
@@ -13,17 +13,17 @@
     },
     "model_training": {
       "status": "SUCCESS",
-      "best_model_name": "GradientBoosting",
+      "best_model_name": "RandomForest",
       "model_path": "models\\model.pkl",
-      "test_r2": 0.9688400779768702,
-      "train_r2": 0.9999999647513973,
-      "rmse": 16.243086247213412,
-      "mae": 11.494257944886368,
+      "test_r2": 0.9532482347030504,
+      "train_r2": 0.9641977108164478,
+      "rmse": 19.526139938312372,
+      "mae": 14.920221666666635,
       "ready_for_production": true,
       "recommendations": [
         "[OK] המודל מוכן לפרודקשן - דיוק מעולה!",
-        "המודל מסביר 96.9% מהשונות בעלויות",
-        "[INFO] דיוק תחזית ממוצע: ±₪11 לחודש",
+        "המודל מסביר 95.3% מהשונות בעלויות",
+        "[INFO] דיוק תחזית ממוצע: ±₪14 לחודש",
         "[OK] דיוק תחזית מצוין - מתאים לתקצוב מדויק",
         "[OK] שגיאות קיצוניות נמוכות - המודל יציב"
       ]
@@ -33,16 +33,16 @@
       "evaluation_status": "PASS",
       "report_path": "reports\\evaluation_report.md",
       "metrics": {
-        "r2_score": 0.9688400779768702,
-        "rmse": 16.243086247213412,
-        "mae": 11.494257944886368,
-        "mape": 4.444236599419364,
-        "mean_prediction": 241.04848515624087,
-        "std_prediction": 84.4806899982987,
-        "mean_actual": 244.56277777777774,
-        "std_actual": 92.01748715480092,
-        "min_error": -15.036970727901974,
-        "max_error": 50.48936595426488
+        "r2_score": 0.9532482347030504,
+        "rmse": 19.52613993831238,
+        "mae": 14.920221666666642,
+        "mape": 5.870676106982119,
+        "mean_prediction": 236.16490981481482,
+        "std_prediction": 82.23711334767496,
+        "mean_actual": 242.63833333333332,
+        "std_actual": 90.3061630879458,
+        "min_error": -23.890683333333328,
+        "max_error": 45.61039999999997
       },
       "plots": {
         "residual": "reports\\residual_plot.png",
@@ -50,6 +50,6 @@
       }
     }
   },
-  "start_time": "2025-12-17T20:33:59.370121",
-  "end_time": "2025-12-17T20:34:00.779509"
+  "start_time": "2025-12-27T23:15:13.417309",
+  "end_time": "2025-12-27T23:15:15.521433"
 }

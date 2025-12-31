@@ -1,7 +1,7 @@
 # FleetGuard AI - Multi-Crew Flow Execution Summary
 
-**Execution Date:** 2025-12-17 20:33:59
-**Total Duration:** 1.44 seconds
+**Execution Date:** 2025-12-27 23:15:13
+**Total Duration:** 2.13 seconds
 **Flow Status:** SUCCESS
 
 ---
@@ -13,7 +13,7 @@
 **Status:** SUCCESS
 
 **Outputs:**
-- Execution time: 0.02 seconds
+- Execution time: 0.03 seconds
 - Steps completed: 3/3
 
 ### Crew 2: Data Scientist Crew
@@ -21,14 +21,14 @@
 **Status:** SUCCESS
 
 **Outputs:**
-- Execution time: 1.41 seconds
+- Execution time: 2.10 seconds
 - Steps completed: 3/3
 
 **Model Performance:**
-- Model Type: GradientBoosting
-- R2 Score: 0.9688
-- RMSE: 16.24
-- MAE: 11.49
+- Model Type: RandomForest
+- R2 Score: 0.9532
+- RMSE: 19.53
+- MAE: 14.92
 
 ---
 
@@ -58,4 +58,4 @@
 
 ---
 
-_Flow execution report generated on 2025-12-17 20:34:00_
+_Flow execution report generated on 2025-12-27 23:15:15_

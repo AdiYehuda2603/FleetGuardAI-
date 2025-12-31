@@ -695,12 +695,42 @@ with tab_rules:
 
 # === לשונית 3: תחזיות ML (טאב חדש!) ===
 with tab3:
-    st.header("🎯 תחזיות ML - GradientBoosting Model")
-    st.caption("תחזיות עלות תחזוקה בזמן אמת מבוססות על המודל שאימן Agent E")
+    st.header("🎯 ML Predictions - GradientBoosting Model")
+    st.caption("Real-time maintenance cost predictions powered by Agent E training cycle")
     st.markdown("---")
 
+    # Helper function to display initialization instructions
+    def show_initialization_instructions(missing_component: str):
+        """Display technical instructions for initializing the AI training sequence."""
+        st.error(f"❌ {missing_component}")
+        st.markdown("---")
+        st.markdown("### Technical Initialization Instructions")
+        st.markdown("""
+        **To initialize the AI training sequence, execute the following steps:**
+
+        1. **Feature Engineering (Agent D):**
+           ```bash
+           cd FleetGuard
+           python -c "from src.agents.feature_engineer_agent import FeatureEngineer; FeatureEngineer().run()"
+           ```
+           *Output:* `data/processed/features.csv`
+
+        2. **Model Training (Agent E):**
+           ```bash
+           python -c "from src.agents.model_trainer_agent import ModelTrainer; ModelTrainer().run()"
+           ```
+           *Output:* `models/model.pkl`, `models/model_metadata.json`
+
+        **Alternative:** Run the full AI system via PowerShell:
+        ```powershell
+        .\\RUN_AI_SYSTEM.ps1
+        ```
+        Select Option 1 to execute the complete training pipeline.
+        """)
+        st.info("ℹ️ The ML predictions require both the trained model and feature file to be present.")
+
     try:
-        # טעינת מודל מוקש (cached)
+        # Load cached ML predictor
         predictor = load_ml_predictor()
 
         if predictor and predictor.model:
@@ -904,12 +934,13 @@ with tab3:
                                         else:
                                             st.error(f"❌ {prediction['error']}")
                                     else:
-                                        st.warning(f"⚠️ לא נמצאו פיצ'רים לרכב {selected_vehicle}")
+                                        st.warning(f"⚠️ No feature data found for vehicle {selected_vehicle}. Regenerate features.csv to include this vehicle.")
                                 else:
-                                    st.error("❌ קובץ פיצ'רים לא נמצא. הרץ את המערכת AI קודם.")
+                                    show_initialization_instructions("Feature file not found: data/processed/features.csv")
 
                             except Exception as e:
-                                st.error(f"❌ שגיאה: {str(e)}")
+                                st.error(f"❌ Prediction error: {str(e)}")
+                                st.exception(e)
                 else:
                     st.warning("⚠️ אין רכבים במערכת")
 
@@ -989,12 +1020,13 @@ with tab3:
                                     st.plotly_chart(fig, use_container_width=True)
 
                                 else:
-                                    st.error("❌ לא הצלחתי לחזות")
+                                    st.error("❌ Fleet prediction failed. Verify model integrity.")
                             else:
-                                st.error("❌ קובץ פיצ'רים לא נמצא")
+                                show_initialization_instructions("Feature file not found: data/processed/features.csv")
 
                         except Exception as e:
-                            st.error(f"❌ שגיאה: {str(e)}")
+                            st.error(f"❌ Fleet prediction error: {str(e)}")
+                            st.exception(e)
 
             # תת-טאב 3: השוואה
             with subtab3:
@@ -1064,18 +1096,20 @@ with tab3:
                                         st.info(f"📊 **{vehicle2}** יקר ב-₪{abs(diff):.2f} ({abs(diff_pct):.1f}%) מ-**{vehicle1}**")
 
                     else:
-                        st.error("❌ קובץ פיצ'רים לא נמצא")
+                        show_initialization_instructions("Feature file not found: data/processed/features.csv")
 
                 except Exception as e:
-                    st.error(f"❌ שגיאה: {str(e)}")
+                    st.error(f"❌ Comparison error: {str(e)}")
+                    st.exception(e)
 
         else:
-            st.error("❌ המודל לא נטען. הרץ את המערכת AI קודם (RUN_AI_SYSTEM.ps1 → Option 1)")
+            show_initialization_instructions("Model not loaded. The trained ML model (model.pkl) was not found or failed to load.")
 
     except ImportError as e:
-        st.error(f"❌ לא ניתן לטעון MLPredictor: {str(e)}")
+        show_initialization_instructions(f"MLPredictor module import failed: {str(e)}")
     except Exception as e:
-        st.error(f"❌ שגיאה: {str(e)}")
+        st.error(f"❌ Unexpected error: {str(e)}")
+        st.exception(e)
 
 # === לשונית 5: נתונים ===
 with tab5:
